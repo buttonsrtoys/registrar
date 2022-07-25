@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:view/registrar.dart';
+import 'package:registrar/registrar.dart';
 
 void main() {
   runApp(const MyApp());
