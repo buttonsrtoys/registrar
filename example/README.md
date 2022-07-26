@@ -1,4 +1,4 @@
-# package example
+# example
 
 A twist on the common Flutter counter project. 
 
@@ -11,4 +11,4 @@ There are three services:
 - `FortyTwoService` holds a number that is equal to 42.
 - `RandomService` generates a random number.
 
-The first service added to the widget tree with `Registrar`. The remaining services are added with `MultiRegistrar`.
+The first service was added to the widget tree with `Registrar`. The remaining services are added with `MultiRegistrar`.

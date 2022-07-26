@@ -2,16 +2,16 @@
 
 `registrar` is a lazy registry that binds the lifecycles of its registered models to widgets.
 
-`registrar` is similar to `get_it` in that it registers and unregisters models. The difference is the lifecycle of the instances are bound to its widgets (`Registrar` and `MultiRegistrar`). E.g., when the `Registrar` widget is added to the widget tree, it registers its model. When it is remove from the tree, it unregisters.
+`registrar` is similar to `get_it` in that it registers and unregisters models. The difference is the lifecycle of the instances are bound to its widgets `Registrar` and `MultiRegistrar`. E.g., when the `Registrar` widget is added to the widget tree, it registers its model. When it is remove from the tree, it unregisters.
 
 `registrar` goals:
-- Provide access to models from anywhere in the widget tree.
+- Provide access to models from anywhere.
 - Work well alone or with other state management packages (RxDart, Provider, GetIt, ...).
 - Be scalable and performant, so suitable for both indy and production apps.
 
-## Adding additional ChangeNotifiers 
+## Registering models
 
-To add a model to the registry, add `Registrar` widget tree:
+To add a model to the registry, add a `Registrar` widget to the widget tree:
 
     Registrar<MyModel>(
       builder: () => MyModel(),
@@ -22,7 +22,7 @@ The model instance can retrieved from anywhere:
 
     final myModel = Registrar.get<MyModel>();
 
-`Registrar` is lazy, meaning it will not build the model until its first get. For times where you already have your instance, you can add that to the registry (instead of its builder);
+`Registrar` is lazy, meaning it will not build the model until its first `get`. For times where you already have your instance, you can add that to the registry directly:
 
     Registrar<MyModel>(
       instance: myModel,
@@ -41,7 +41,7 @@ And then get the model by type and name:
 
     final myModel = Registrar.get<MyModel>(name: 'some unique name');
 
-Unlimited `Registrar` widgets can be added to the widget tree. If you want to manage multiple models with a single widget:
+Unlimited `Registrar` widgets can be added to the widget tree. If you want to manage multiple models with a single widget, use `MultiRegistrar`:
 
     MultiRegistrar(
       delegates: [
@@ -51,13 +51,13 @@ Unlimited `Registrar` widgets can be added to the widget tree. If you want to ma
       child: MyWidget(),
     );
 
-For use cases where you would to manage registering and unregistering objects, you can used the `register` and `unregister` functions:
+For use cases where you would to manage registering and unregistering models, you can used the `register` and `unregister` functions:
 
     Registrar.register<ValueNotifier>(name: 'firstName', builder: () => ValueNotifier(''))
     Registrar.get<ValueNotifier>(name: 'firstName') = 'Sue';
 
 ## That's it! 
 
-The [example app](https://github.com/buttonsrtoys/registrar/tree/main/example) demos much of the above functionality.
+The [example app](https://github.com/buttonsrtoys/registrar/tree/main/example) shows much of the above functionality.
 
 If you have questions or suggestions on anything `registrar`, please do not hesitate to contact me.
