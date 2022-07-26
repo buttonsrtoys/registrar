@@ -58,6 +58,6 @@ For use cases where you need to directly manage registering and unregistering mo
 
 ## That's it! 
 
-The [example app](https://github.com/buttonsrtoys/registrar/tree/main/example) shows much of the above functionality.
+The [example app](https://github.com/buttonsrtoys/registrar/tree/main/example) shows much of the functionality discussed above.
 
 If you have questions or suggestions on anything `registrar`, please do not hesitate to contact me.
