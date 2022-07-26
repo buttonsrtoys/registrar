@@ -8,7 +8,7 @@ import 'package:flutter/widgets.dart';
 ///
 /// [builder] builds the [T].
 /// [instance] is an instance of [T]
-/// [name] is a unique name key and only needed when more than one [Object] is registered of the same type.
+/// [name] is a unique name key and only needed when more than one instance is registered of the same type.
 /// [child] is the child widget.
 ///
 /// You can pass [builder] or [instance] but not both. Passing [builder] is recommended, as it makes the implementation
@@ -42,10 +42,31 @@ class Registrar<T extends Object> extends StatefulWidget {
         'Error: Tried to register an instance of type $T with name $name but it is already registered.',
       );
     }
-    if (!_registry.containsKey(T)) {
-      _registry[T] = <String?, _RegistryEntry<T>>{};
+    _register(type: T, instance: instance, builder: builder, name: name);
+  }
+
+  /// Register by runtimeType for when compiled type is not available.
+  ///
+  /// [register] is preferred. However, use when type is not known at compile time (e.g., a super-class is registering a
+  /// sub-class).
+  ///
+  /// [instance] is registered by runtimeType return by [instance.runtimeType]
+  /// [name] is a unique name key and only needed when more than one instance is registered of the same type.
+  static void registerByRuntimeType({required Object instance, String? name}) {
+    final runtimeType = instance.runtimeType;
+    if (Registrar.isRegisteredByRuntimeType(runtimeType: runtimeType, name: name)) {
+      throw Exception(
+        'Error: Tried to register an instance of type $runtimeType with name $name but it is already registered.',
+      );
     }
-    _registry[T]![name] = _RegistryEntry<T>(instance: instance, builder: builder);
+    _register(type: runtimeType, instance: instance, name: name);
+  }
+
+  static void _register({required Type type, Object? instance, Object Function()? builder, String? name}) {
+    if (!_registry.containsKey(type)) {
+      _registry[type] = <String?, _RegistryEntry>{};
+    }
+    _registry[type]![name] = _RegistryEntry(type: type, builder: builder, instance: instance);
   }
 
   /// Unregister an [Object] so that it can no longer be retrieved with [Registrar.get]
@@ -57,12 +78,32 @@ class Registrar<T extends Object> extends StatefulWidget {
         'Error: Tried to unregister an instance of type $T with name $name but it is not registered.',
       );
     }
-    final registryEntry = _registry[T]!.remove(name);
-    if (_registry[T]!.isEmpty) {
-      _registry.remove(T);
+    _unregister(type: T, name: name);
+  }
+
+  /// Unregister by runtimeType for when compiled type is not available.
+  ///
+  /// [unregister] is preferred. However, use when type is not known at compile time (e.g., a super-class is
+  /// unregistering a sub-class).
+  ///
+  /// [runtimeType] is value return by [Object.runtimeType]
+  /// [name] is a unique name key and only needed when more than one instance is registered of the same type.
+  static void unregisterByRuntimeType({required Type runtimeType, String? name}) {
+    if (!Registrar.isRegisteredByRuntimeType(runtimeType: runtimeType, name: name)) {
+      throw Exception(
+        'Error: Tried to unregister an instance of type $runtimeType with name $name but it is not registered.',
+      );
+    }
+    _unregister(type: runtimeType, name: name);
+  }
+
+  static void _unregister({required Type type, String? name}) {
+    final registryEntry = _registry[type]!.remove(name);
+    if (_registry[type]!.isEmpty) {
+      _registry.remove(type);
     }
     if (registryEntry!.instance is ChangeNotifier) {
-      registryEntry.instance.dispose();
+      (registryEntry.instance as ChangeNotifier).dispose();
     }
   }
 
@@ -70,6 +111,11 @@ class Registrar<T extends Object> extends StatefulWidget {
   static bool isRegistered<T extends Object>({String? name}) {
     assert(T != Object, _missingGenericError('isRegistered', 'Object'));
     return _registry.containsKey(T) && _registry[T]!.containsKey(name);
+  }
+
+  /// Determines whether an [Object] is registered and therefore retrievable with [Registrar.get]
+  static bool isRegisteredByRuntimeType({required Type runtimeType, String? name}) {
+    return _registry.containsKey(runtimeType) && _registry[runtimeType]!.containsKey(name);
   }
 
   /// Get a registered [T]
@@ -158,7 +204,7 @@ class _MultiRegistrarState extends State<MultiRegistrar> {
 ///
 /// [builder] builds the [Object].
 /// [instance] is an instance of [T]
-/// [name] is a unique name key and only needed when more than one [Object] is registered of the same type.
+/// [name] is a unique name key and only needed when more than one instance is registered of the same type.
 ///
 /// See [Registrar] for the difference between using [builder] and [instance]
 class RegistrarDelegate<T extends Object> {
@@ -188,16 +234,17 @@ class RegistrarDelegate<T extends Object> {
 ///
 /// The constructor can receive either [instance] or [builder] but not both. Passing [builder] is recommended as it
 /// makes the implementation lazy. I.e., [builder] is executed on the first get.
-class _RegistryEntry<T> {
+class _RegistryEntry {
   _RegistryEntry({
+    required Type type,
     this.builder,
-    T? instance,
+    Object? instance,
   })  : _instance = instance,
-        assert(T != Object, _missingGenericError('Registrar constructor', 'Object')),
+        assert(type != Object, _missingGenericError('Registrar constructor', 'Object')),
         assert(builder == null ? instance != null : instance == null);
-  final T Function()? builder;
-  T? _instance;
-  T get instance => _instance == null ? _instance = builder!() : _instance!;
+  final Object Function()? builder;
+  Object? _instance;
+  Object get instance => _instance == null ? _instance = builder!() : _instance!;
 }
 
 final _registry = <Type, Map<String?, _RegistryEntry>>{};

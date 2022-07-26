@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:view/registrar.dart';
+import 'package:registrar/registrar.dart';
 
 class MyModel {
   final answer = 42;
