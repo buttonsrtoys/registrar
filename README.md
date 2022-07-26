@@ -11,7 +11,7 @@
 
 ## Registering models
 
-To add a model to the registry, add a `Registrar` widget to the widget tree:
+To add a model to the registry, add a `Registrar` widget to the widget tree with a builder for your model:
 
     Registrar<MyModel>(
       builder: () => MyModel(),
@@ -51,7 +51,7 @@ Unlimited `Registrar` widgets can be added to the widget tree. If you want to ma
       child: MyWidget(),
     );
 
-For use cases where you would to manage registering and unregistering models, you can used the `register` and `unregister` functions:
+For use cases where you need to directly manage registering and unregistering models (instead of letting `Registrar` and `MultiRegistrar` manage your models), you can used the `register` and `unregister` functions:
 
     Registrar.register<ValueNotifier>(name: 'firstName', builder: () => ValueNotifier(''))
     Registrar.get<ValueNotifier>(name: 'firstName') = 'Sue';
