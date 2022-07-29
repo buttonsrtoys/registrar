@@ -1,8 +1,8 @@
 # registrar
 
-`registrar` is a lazy registry that binds the lifecycles of its registered models to widgets.
+Manages a registry of services and ChangeNotifiers.
 
-`registrar` is similar to `get_it` in that it registers and unregisters models. The difference is the lifecycle of the instances are bound to its widgets `Registrar` and `MultiRegistrar`. E.g., when the `Registrar` widget is added to the widget tree, it registers its model. When it is remove from the tree, it unregisters.
+`registrar` is similar to `get_it` in that it registers and unregisters models using lazy loading. A difference is the lifecycle of the registry items are bound to its widgets `Registrar` and `MultiRegistrar`. E.g., when the `Registrar` widget is added to the widget tree, it registers its model. When it is remove from the tree, it unregisters.
 
 `registrar` goals:
 - Provide access to models from anywhere.
