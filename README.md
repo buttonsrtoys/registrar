@@ -2,7 +2,7 @@
 
 Manages a registry of services and ChangeNotifiers.
 
-`registrar` is similar to `get_it` in that it registers and unregisters models using lazy loading. A difference is the lifecycle of the registry items are bound to its widgets `Registrar` and `MultiRegistrar`. E.g., when the `Registrar` widget is added to the widget tree, it registers its model. When it is remove from the tree, it unregisters.
+`registrar` is similar to `get_it` in that it registers and unregisters models using lazy loading. A difference is the lifecycles of the registry items are bound to its widgets `Registrar` and `MultiRegistrar`. E.g., when the `Registrar` widget is added to the widget tree, it registers its model. When it is remove from the tree, it unregisters.
 
 `registrar` goals:
 - Provide access to models from anywhere.
@@ -11,7 +11,7 @@ Manages a registry of services and ChangeNotifiers.
 
 ## Registering models
 
-To add a model to the registry, add a `Registrar` widget to the widget tree with a builder for your model:
+To add a model to the registry, give a builder to a `Registrar` widget and add it to the widget tree:
 
     Registrar<MyModel>(
       builder: () => MyModel(),
@@ -51,10 +51,9 @@ Unlimited `Registrar` widgets can be added to the widget tree. If you want to ma
       child: MyWidget(),
     );
 
-For use cases where you need to directly manage registering and unregistering models (instead of letting `Registrar` and `MultiRegistrar` manage your models), you can used the `register` and `unregister` functions:
+For use cases where you need to directly manage registering and unregistering models (instead of letting `Registrar` and `MultiRegistrar` manage your models), you can use the static `register` and `unregister` functions:
 
-    Registrar.register<ValueNotifier>(name: 'firstName', builder: () => ValueNotifier(''))
-    Registrar.get<ValueNotifier>(name: 'firstName') = 'Sue';
+    Registrar.register<MyModel>(builder: () => MyModel(''))
 
 ## That's it! 
 
