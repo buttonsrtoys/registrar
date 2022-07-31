@@ -73,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               Text(
                 '$_counter',
-                style: TextStyle(fontSize: 64, color: Registrar.get<ColorNotifier>().color),
+                style: TextStyle(fontSize: 64, color: Registrar.get<ColorNotifier>().color.value),
               ),
               OutlinedButton(
                 onPressed: () => setState(() {
@@ -101,10 +101,13 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class ColorNotifier extends ChangeNotifier {
+  int _counter = 0;
+  final color = ValueNotifier<Color>(Colors.black);
+
   ColorNotifier() {
+    color.addListener(notifyListeners);
     _timer = Timer.periodic(const Duration(seconds: 2), (_) {
-      color = <Color>[Colors.orange, Colors.purple, Colors.cyan][++_counter % 3];
-      notifyListeners();
+      color.value = <Color>[Colors.orange, Colors.purple, Colors.cyan][++_counter % 3];
     });
   }
 
@@ -115,13 +118,10 @@ class ColorNotifier extends ChangeNotifier {
     _timer.cancel();
     super.dispose();
   }
-
-  int _counter = 0;
-  Color color = Colors.black;
 }
 
 class FortyTwoService {
-  final int number = 42;
+  int get number => 42;
 }
 
 class RandomService {
