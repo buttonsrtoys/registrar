@@ -59,7 +59,7 @@ For use cases where you need to directly manage registering and unregistering mo
 
 ## Example app
 
-The repo example shows much of the functionality discussed above. The 3 buttons each get registered services.
+The example shows much of the functionality discussed above. The 3 buttons each get registered services.
 
 ![example app](https://github.com/buttonsrtoys/registrar/blob/main/example/example.gif)
 
