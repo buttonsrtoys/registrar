@@ -12,3 +12,5 @@ There are three services:
 - `RandomService` generates a random number.
 
 The first service was added to the widget tree with `Registrar`. The remaining services are added with `MultiRegistrar`.
+
+![example](https://github.com/buttonsrtoys/registrar/blob/main/example/example.gif)
