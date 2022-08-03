@@ -57,8 +57,12 @@ For use cases where you need to directly manage registering and unregistering mo
 
     Registrar.register<MyModel>(builder: () => MyModel(''))
 
-## That's it! 
+## Example app
 
-The [example app](https://github.com/buttonsrtoys/registrar/tree/main/example) shows much of the functionality discussed above.
+The repo example shows much of the functionality discussed above. The 3 buttons each get registered services.
+
+![example app](https://github.com/buttonsrtoys/registrar/blob/main/example/example.gif)
+
+## That's it! 
 
 If you have questions or suggestions on anything Registrar, please do not hesitate to contact me.
