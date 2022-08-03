@@ -1,3 +1,6 @@
+## 0.1.8
+Changed example gif.
+
 ## 0.1.7
 Added example gif.
 
