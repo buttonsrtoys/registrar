@@ -1,3 +1,6 @@
+## 0.1.4
+Corrected readme.
+
 ## 0.1.3
 - Removed unused dependency
 - Added ValueNotifier to example
