@@ -1,3 +1,6 @@
+## 0.1.9
+Embedded example gif in readme.
+
 ## 0.1.8
 Changed example gif.
 
