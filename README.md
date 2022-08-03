@@ -1,12 +1,14 @@
 # registrar
 
+![registrar logo](https://github.com/buttonsrtoys/registrar/blob/main/assets/RegistrarLogo.png)
+
 A Flutter library that manages a registry of services and ChangeNotifiers. Similar to GetIt, but binds the lifecycles of its registered objects to widgets.
 
 Registrar registers and unregisters models using lazy loading. When Registrar widgets are added to the widget tree, they register their models. When they are removed from the tree, they unregister.
 
 Registrar goals:
 - Provide access to models from anywhere.
-- Work well alone or with other state management packages (RxDart, Provider, GetIt, ...).
+- Work alone or with other state management packages (RxDart, Provider, GetIt, ...).
 - Be scalable and performant, so suitable for both indy and production apps.
 
 ## Registering models
@@ -18,7 +20,7 @@ To add a model to the registry, give a builder to a "Registrar" widget and add i
       child: MyWidget(),
     );
 
-The model instance can retrieved from anywhere:
+The model instance can retrieved from anywhere by type:
 
     final myModel = Registrar.get<MyModel>();
 

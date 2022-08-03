@@ -1,6 +1,6 @@
 name: registrar
 description: A Flutter library that manages a registry of services and ChangeNotifiers. Similar to GetIt, but binds the lifecycles of its registered objects to widgets.
-version: 0.1.5
+version: 0.1.6
 repository: https://github.com/buttonsrtoys/registrar
 issue_tracker: https://github.com/buttonsrtoys/registrar/issues
 
