@@ -1,3 +1,6 @@
+## 0.1.5
+Updated changelog.
+
 ## 0.1.4
 Corrected readme.
 

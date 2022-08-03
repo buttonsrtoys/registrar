@@ -1,8 +1,8 @@
 # registrar
 
-Flutter package that manages a registry of services and ChangeNotifiers.
+A Flutter library that manages a registry of services and ChangeNotifiers. Similar to GetIt, but binds the lifecycles of its registered objects to widgets.
 
-Similar to GetIt, Registrar registers and unregisters models using lazy loading. A difference between Registrar and GetIt is that Registrar binds the lifecycles of registered objects its widgets `Registrar` and `MultiRegistrar`. E.g., when the `Registrar` widget is added to the widget tree, it registers its model. When it is remove from the tree, it unregisters.
+Registrar registers and unregisters models using lazy loading. When Registrar widgets are added to the widget tree, they register their models. When they are removed from the tree, they unregister.
 
 Registrar goals:
 - Provide access to models from anywhere.
