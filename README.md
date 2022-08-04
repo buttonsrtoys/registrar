@@ -57,11 +57,19 @@ For use cases where you need to directly manage registering and unregistering mo
 
     Registrar.register<MyModel>(builder: () => MyModel(''))
 
-## Example app
+## Example
+(The source code is under the Pub.dev "Example" tab and in the GitHub `example/lib/main.dart` file.)
 
-The example shows much of the functionality discussed above. The 3 buttons each get registered services.
+A variation on the common Flutter counter project.
 
-![example app](https://github.com/buttonsrtoys/registrar/blob/main/example/example.gif)
+There are three services:
+1. ColorNotifier changes its color every N seconds and then calls `notifyListeners`.
+2. FortyTwoService holds a number that is equal to 42.
+3. RandomService generates a random number.
+
+The first service was added to the widget tree with `Registrar`. The remaining services were added with `MultiRegistrar`.
+
+![example](https://github.com/buttonsrtoys/registrar/blob/main/example/example.gif)
 
 ## That's it! 
 
