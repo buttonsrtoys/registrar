@@ -57,6 +57,10 @@ For use cases where you need to directly manage registering and unregistering mo
 
     Registrar.register<MyModel>(builder: () => MyModel(''))
 
+## Unregistering ChangeNotifiers
+
+In addition to the Registrar widget unregistering its object when it is removed from the widget tree, the Registrar widget also checks if the registered object was a ChangeNotifier. If so, it optionally calls the ChangeNotifier's `dispose` method.
+
 ## Example
 (The source code for this example is under the Pub.dev "Example" tab and in the GitHub `example/lib/main.dart` file.)
 
