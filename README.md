@@ -59,7 +59,7 @@ For use cases where you need to directly manage registering and unregistering mo
 
 ## Unregistering ChangeNotifiers
 
-In addition to the Registrar widget unregistering its object when it is removed from the widget tree, the Registrar widget also checks if the registered object was a ChangeNotifier. If so, it optionally calls the ChangeNotifier's `dispose` method.
+In addition to Registrar widgets unregistering objects when they are removed from the widget tree, Registrar widgets also checks if the registered objects were ChangeNotifiers. If so, it optionally calls the ChangeNotifiers' `dispose` method.
 
 ## Example
 (The source code for this example is under the Pub.dev "Example" tab and in the GitHub `example/lib/main.dart` file.)
