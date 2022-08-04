@@ -58,7 +58,7 @@ For use cases where you need to directly manage registering and unregistering mo
     Registrar.register<MyModel>(builder: () => MyModel(''))
 
 ## Example
-(source code under "Example" tab)
+(The source code is under the Pub.dev "Example" tab and in the GitHub example/lib/main.dart file.)
 
 A variation on the common Flutter counter project.
 
