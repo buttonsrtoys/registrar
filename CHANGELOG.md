@@ -1,3 +1,6 @@
+## 0.1.10
+Static analysis.
+
 ## 0.1.9
 Embedded example gif in readme.
 

@@ -1,10 +1,6 @@
-# example
+# Example
 
-A twist on the common Flutter counter project. 
-
-## Description
-
-Increments a counter by pressing the floating action button (FAB).
+A variation on the common Flutter counter project. 
 
 There are three services:
 - `ColorNotifier` changes its color every N seconds and then calls `notifyListeners`.
