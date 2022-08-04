@@ -1,3 +1,6 @@
+## 0.2.0
+Added "dispose" boolean to API.
+
 ## 0.1.10
 Static analysis.
 

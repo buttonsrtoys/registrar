@@ -9,6 +9,9 @@ import 'package:flutter/widgets.dart';
 /// [builder] builds the [T].
 /// [instance] is an instance of [T]
 /// [name] is a unique name key and only needed when more than one instance is registered of the same type.
+/// If registered item is ChangeNotifier, [dispose] determines if dispose function is called. Meaningless otherwise.
+/// Typically, the [Registrar] widget manages the registered item, so calls dispose when the widget is removed from
+/// the widget tree.
 /// [child] is the child widget.
 ///
 /// You can pass [builder] or [instance] but not both. Passing [builder] is recommended, as it makes the implementation
@@ -19,13 +22,16 @@ class Registrar<T extends Object> extends StatefulWidget {
     this.builder,
     this.instance,
     this.name,
+    this.dispose = true,
     required this.child,
     super.key,
   })  : assert(T != Object, _missingGenericError('Registrar constructor', 'Object')),
-        assert(builder == null ? instance != null : instance == null);
+        assert(builder == null ? instance != null : instance == null, 'Must pass builder or instance.'),
+        assert(instance != null && dispose == true ? instance is ChangeNotifier : true, 'Instance not ChangeNotifier');
   final T Function()? builder;
   final T? instance;
   final String? name;
+  final bool dispose;
   final Widget child;
 
   @override
@@ -76,14 +82,14 @@ class Registrar<T extends Object> extends StatefulWidget {
 
   /// Unregister an [Object] so that it can no longer be retrieved with [Registrar.get]
   ///
-  /// If [T] is a ChangeNotifier then its `dispose()` method is called.
-  static void unregister<T extends Object>({String? name}) {
+  /// If [T] is a ChangeNotifier then its `dispose()` method is called if [dispose] is true
+  static void unregister<T extends Object>({String? name, bool dispose = true}) {
     if (!Registrar.isRegistered<T>(name: name)) {
       throw Exception(
         'Error: Tried to unregister an instance of type $T with name $name but it is not registered.',
       );
     }
-    _unregister(type: T, name: name);
+    _unregister(type: T, name: name, dispose: dispose);
   }
 
   /// Unregister by runtimeType for when compiled type is not available.
@@ -92,22 +98,24 @@ class Registrar<T extends Object> extends StatefulWidget {
   /// unregistering a sub-class).
   ///
   /// [runtimeType] is value return by [Object.runtimeType]
-  /// [name] is a unique name key and only needed when more than one instance is registered of the same type.
-  static void unregisterByRuntimeType({required Type runtimeType, String? name}) {
+  /// [name] is a unique name key and only needed when more than one instance is registered of the same type. (See
+  /// [Registrar] comments for more information on [dispose]).
+  /// If registered item is a ChangeNotifier, [dispose] determines whether its dispose function is called.
+  static void unregisterByRuntimeType({required Type runtimeType, String? name, bool dispose = true}) {
     if (!Registrar.isRegisteredByRuntimeType(runtimeType: runtimeType, name: name)) {
       throw Exception(
         'Error: Tried to unregister an instance of type $runtimeType with name $name but it is not registered.',
       );
     }
-    _unregister(type: runtimeType, name: name);
+    _unregister(type: runtimeType, name: name, dispose: dispose);
   }
 
-  static void _unregister({required Type type, String? name}) {
+  static void _unregister({required Type type, String? name, required bool dispose}) {
     final registryEntry = _registry[type]!.remove(name);
     if (_registry[type]!.isEmpty) {
       _registry.remove(type);
     }
-    if (registryEntry!.instance is ChangeNotifier) {
+    if (dispose && registryEntry!.instance is ChangeNotifier) {
       (registryEntry.instance as ChangeNotifier).dispose();
     }
   }
@@ -143,7 +151,7 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> {
 
   @override
   void dispose() {
-    Registrar.unregister<T>(name: widget.name);
+    Registrar.unregister<T>(name: widget.name, dispose: widget.dispose);
     super.dispose();
   }
 
@@ -210,6 +218,8 @@ class _MultiRegistrarState extends State<MultiRegistrar> {
 /// [builder] builds the [Object].
 /// [instance] is an instance of [T]
 /// [name] is a unique name key and only needed when more than one instance is registered of the same type.
+/// If registered item is a ChangeNotifier, [dispose] determines whether its dispose function is called. (See
+/// [Registrar] comments for more information on [dispose]).
 ///
 /// See [Registrar] for the difference between using [builder] and [instance]
 class RegistrarDelegate<T extends Object> {
@@ -217,18 +227,20 @@ class RegistrarDelegate<T extends Object> {
     this.builder,
     this.instance,
     this.name,
+    this.dispose = true,
   }) : assert(T != Object, _missingGenericError('RegistrarDelegate constructor', 'Object'));
 
   final T Function()? builder;
   final String? name;
   final T? instance;
+  final bool dispose;
 
   void _register() {
     Registrar.register<T>(instance: instance, builder: builder, name: name);
   }
 
   void _unregister() {
-    Registrar.unregister<T>(name: name);
+    Registrar.unregister<T>(name: name, dispose: dispose);
   }
 }
 
