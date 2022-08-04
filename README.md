@@ -57,12 +57,14 @@ For use cases where you need to directly manage registering and unregistering mo
 
     Registrar.register<MyModel>(builder: () => MyModel(''))
 
+## Unregistering ChangeNotifiers
+
+In addition to Registrar widgets unregistering objects when they are removed from the widget tree, Registrar widgets also check if the registered objects were ChangeNotifiers. If so, the Registrar widgets optionally call the ChangeNotifiers' `dispose` method.
+
 ## Example
-(The source code is under the Pub.dev "Example" tab and in the GitHub `example/lib/main.dart` file.)
+(The source code for this example is under the Pub.dev "Example" tab and in the GitHub `example/lib/main.dart` file.)
 
-A variation on the common Flutter counter project.
-
-There are three services:
+There are three registered services:
 1. ColorNotifier changes its color every N seconds and then calls `notifyListeners`.
 2. FortyTwoService holds a number that is equal to 42.
 3. RandomService generates a random number.
