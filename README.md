@@ -15,10 +15,12 @@ Registrar goals:
 
 To add a model to the registry, give a builder to a "Registrar" widget and add it to the widget tree:
 
+```dart
     Registrar<MyModel>(
       builder: () => MyModel(),
       child: MyWidget(),
     );
+```
 
 The model instance can retrieved from anywhere by type:
 
@@ -26,22 +28,28 @@ The model instance can retrieved from anywhere by type:
 
 Registrar is lazy, meaning it will not build the model until its first `get`. For times where you already have your instance, you can add that to the registry directly:
 
+```dart
     Registrar<MyModel>(
       instance: myModel,
       child: MyWidget(),
     );
+```
 
 If more than one instance of a model of the same type is needed, you can specify a unique name:
 
+```dart
     Registrar<MyModel>(
       builder: () => MyModel(),
       name: 'some unique name',
       child: MyWidget(),
     );
+```
 
 And then get the model by type and name:
 
+```dart
     final myModel = Registrar.get<MyModel>(name: 'some unique name');
+```
 
 Unlimited Registrar widgets can be added to the widget tree. If you want to manage multiple models with a single widget, use MultiRegistrar:
 
