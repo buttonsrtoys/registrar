@@ -25,7 +25,7 @@ class Registrar<T extends Object> extends StatefulWidget {
     this.dispose = true,
     required this.child,
     super.key,
-  })  : assert(T != Object, _missingGenericError('Registrar constructor', 'Object')),
+  })  : assert(T != Object, _missingGenericError('constructor Registrar', 'Object')),
         assert(builder == null ? instance != null : instance == null, 'Must pass builder or instance.'),
         assert(instance != null && dispose == true ? instance is ChangeNotifier : true, 'Instance not ChangeNotifier');
   final T Function()? builder;
@@ -135,7 +135,7 @@ class Registrar<T extends Object> extends StatefulWidget {
   static T get<T extends Object>({String? name}) {
     if (!Registrar.isRegistered<T>(name: name)) {
       throw Exception(
-        'Registrar error. Tried to get an instance of type $T with name $name but it is not registered.',
+        'Registrar tried to get an instance of type $T with name $name but it is not registered.',
       );
     }
     return _registry[T]![name]!.instance as T;
@@ -228,7 +228,7 @@ class RegistrarDelegate<T extends Object> {
     this.instance,
     this.name,
     this.dispose = true,
-  }) : assert(T != Object, _missingGenericError('RegistrarDelegate constructor', 'Object'));
+  }) : assert(T != Object, _missingGenericError('constructor RegistrarDelegate', 'Object'));
 
   final T Function()? builder;
   final String? name;
@@ -257,7 +257,7 @@ class _RegistryEntry {
     this.builder,
     Object? instance,
   })  : _instance = instance,
-        assert(type != Object, _missingGenericError('Registrar constructor', 'Object')),
+        assert(type != Object, _missingGenericError('constructor _RegistrarEntry', 'Object')),
         assert(builder == null ? instance != null : instance == null);
   final Object Function()? builder;
   Object? _instance;
@@ -267,5 +267,5 @@ class _RegistryEntry {
 final _registry = <Type, Map<String?, _RegistryEntry>>{};
 
 String _missingGenericError(String function, String type) =>
-    'Missing generic error: "$function" called without a custom subclass generic. Did you call '
+    'Missing generic. The function "$function" was called without a custom subclass generic. Did you call '
     '"$function(..)" instead of "$function<$type>(..)"?';
