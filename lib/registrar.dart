@@ -13,6 +13,7 @@ import 'package:flutter/widgets.dart';
 /// Typically, the [Registrar] widget manages the registered item, so calls dispose when the widget is removed from
 /// the widget tree.
 /// [child] is the child widget.
+/// [scoped] is set to add an InheritedWidget to the widget so children can access with [context.get].
 ///
 /// You can pass [builder] or [instance] but not both. Passing [builder] is recommended, as it makes the implementation
 /// lazy. I.e., the instance will only be created the first time it is used. If you already have an instance, then
@@ -22,6 +23,7 @@ class Registrar<T extends Object> extends StatefulWidget {
     this.builder,
     this.instance,
     this.name,
+    this.scoped = false,
     this.dispose = true,
     required this.child,
     super.key,
@@ -32,6 +34,7 @@ class Registrar<T extends Object> extends StatefulWidget {
   final T? instance;
   final String? name;
   final bool dispose;
+  final bool scoped;
   final Widget child;
 
   @override
@@ -157,8 +160,55 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.child;
+    if (widget.scoped) {
+      return _RegistrarInheritedWidget(builder: widget.builder, instance: widget.instance, child: widget.child);
+    } else {
+      return widget.child;
+    }
   }
+}
+
+extension RegistrarBuildContextExtension on BuildContext {
+  /// Traverses up the the widget tree to find first InheritedElement with model of type [T]. Returns [T].
+  ///
+  /// Performs a lazy initialization if necessary. Throws exception of widget not found.
+  T get<T extends Object>() {
+    final inheritedElement =
+        getElementForInheritedWidgetOfExactType<_RegistrarInheritedWidget<T>>() as _RegistrarInheritedWidget<T>?;
+    if (inheritedElement == null) {
+      throw Exception('No scoped Registrar widget found with type $T');
+    }
+    return inheritedElement.instance;
+  }
+}
+
+class _LazyInitializer<T extends Object> {
+  _LazyInitializer(this._builder, this._instance);
+  final T Function()? _builder;
+  T? _instance;
+  T get instance => _instance == null ? _instance = _builder!() : _instance!;
+}
+
+class _RegistrarInheritedWidget<T extends Object> extends InheritedWidget {
+  _RegistrarInheritedWidget({
+    Key? key,
+    T Function()? builder,
+    T? instance,
+    required Widget child,
+  })  : _lazyInitializer = _LazyInitializer(builder, instance),
+        super(key: key, child: child);
+
+  late final _LazyInitializer<T> _lazyInitializer;
+  T get instance => _lazyInitializer.instance;
+
+  static _RegistrarInheritedWidget of(BuildContext context) {
+    final _RegistrarInheritedWidget? result = context.dependOnInheritedWidgetOfExactType<_RegistrarInheritedWidget>();
+    assert(result != null, 'No Registrar with scope found in context');
+    return result!;
+  }
+
+  @override
+  bool updateShouldNotify(_RegistrarInheritedWidget oldWidget) => false;
 }
 
 /// Register multiple [Object]s so they can be retrieved with [Registrar.get]
@@ -254,14 +304,14 @@ class RegistrarDelegate<T extends Object> {
 class _RegistryEntry {
   _RegistryEntry({
     required Type type,
-    this.builder,
+    Object Function()? builder,
     Object? instance,
-  })  : _instance = instance,
-        assert(type != Object, _missingGenericError('constructor _RegistrarEntry', 'Object')),
-        assert(builder == null ? instance != null : instance == null);
-  final Object Function()? builder;
-  Object? _instance;
-  Object get instance => _instance == null ? _instance = builder!() : _instance!;
+  })  : assert(type != Object, _missingGenericError('constructor _RegistrarEntry', 'Object')),
+        assert(builder == null ? instance != null : instance == null) {
+    _lazyInitializer = _LazyInitializer(builder, instance);
+  }
+  late final _LazyInitializer _lazyInitializer;
+  Object get instance => _lazyInitializer.instance;
 }
 
 final _registry = <Type, Map<String?, _RegistryEntry>>{};
