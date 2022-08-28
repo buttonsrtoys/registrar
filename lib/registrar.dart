@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/widgets.dart';
 
 /// A widget that registers singletons lazily
@@ -7,34 +9,27 @@ import 'package:flutter/widgets.dart';
 /// is called when it is unregistered.
 ///
 /// [builder] builds the [T].
-/// [instance] is an instance of [T]
 /// [name] is a unique name key and only needed when more than one instance is registered of the same type.
 /// If registered item is ChangeNotifier, [dispose] determines if dispose function is called. Meaningless otherwise.
 /// Typically, the [Registrar] widget manages the registered item, so calls dispose when the widget is removed from
 /// the widget tree.
 /// [child] is the child widget.
-/// [scoped] is set to add an InheritedWidget to the widget so children can access with [context.get].
-///
-/// You can pass [builder] or [instance] but not both. Passing [builder] is recommended, as it makes the implementation
-/// lazy. I.e., the instance will only be created the first time it is used. If you already have an instance, then
-/// use [instance].
+/// [inherited] is set to add an InheritedWidget to the widget so children can access with [context.get].
 class Registrar<T extends Object> extends StatefulWidget {
   Registrar({
-    this.builder,
-    this.instance,
+    required this.builder,
     this.name,
-    this.scoped = false,
+    this.inherited = false,
     this.dispose = true,
-    required this.child,
     super.key,
-  })  : assert(T != Object, _missingGenericError('constructor Registrar', 'Object')),
-        assert(builder == null ? instance != null : instance == null, 'Must pass builder or instance.'),
-        assert(instance != null && dispose == true ? instance is ChangeNotifier : true, 'Instance not ChangeNotifier');
+    required this.child,
+  }) : assert(T != Object, _missingGenericError('constructor Registrar', 'Object'));
+  // Rich, add this assert somewhere
+  // assert(instance != null && dispose == true ? instance is ChangeNotifier : true, 'Instance not ChangeNotifier');
   final T Function()? builder;
-  final T? instance;
   final String? name;
   final bool dispose;
-  final bool scoped;
+  final bool inherited;
   final Widget child;
 
   @override
@@ -146,22 +141,41 @@ class Registrar<T extends Object> extends StatefulWidget {
 }
 
 class _RegistrarState<T extends Object> extends State<Registrar<T>> {
+  bool shouldBuildInheritedWidget = false;
+
+  void rebuildInheritedWidget() => setState(() => shouldBuildInheritedWidget = true);
+
   @override
   void initState() {
     super.initState();
-    Registrar.register<T>(instance: widget.instance, builder: widget.builder, name: widget.name);
+    if (!widget.inherited) {
+      Registrar.register<T>(builder: widget.builder, name: widget.name);
+    }
   }
 
   @override
   void dispose() {
-    Registrar.unregister<T>(name: widget.name, dispose: widget.dispose);
+    if (!widget.inherited) {
+      Registrar.unregister<T>(name: widget.name, dispose: widget.dispose);
+    }
     super.dispose();
   }
 
   @override
+  void didUpdateWidget(covariant Registrar<T> oldWidget) {
+    shouldBuildInheritedWidget = false;
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (widget.scoped) {
-      return _RegistrarInheritedWidget(builder: widget.builder, instance: widget.instance, child: widget.child);
+    if (widget.inherited) {
+      return _RegistrarInheritedWidget(
+        builder: widget.builder,
+        changeNotifierListener: rebuildInheritedWidget,
+        shouldRebuildInheritedWidget: shouldBuildInheritedWidget,
+        child: widget.child,
+      );
     } else {
       return widget.child;
     }
@@ -169,16 +183,40 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> {
 }
 
 extension RegistrarBuildContextExtension on BuildContext {
-  /// Traverses up the the widget tree to find first InheritedElement with model of type [T]. Returns [T].
+  /// Searches for a [Registrar] widget with [inherited] param set and a model of type [T].
   ///
+  /// usage:
+  ///
+  ///     final myService = context.get<MyService>();
+  ///
+  /// The search is for the first match up the widget tree from the calling widget.
+  /// This does not set up a dependency between the InheritedWidget and the context. For that, use [listenTo].
   /// Performs a lazy initialization if necessary. Throws exception of widget not found.
+  /// For those familiar with Provider, [get] is effectively `Provider.of<MyModel>(listen: false);`.
   T get<T extends Object>() {
-    final inheritedElement =
-        getElementForInheritedWidgetOfExactType<_RegistrarInheritedWidget<T>>() as _RegistrarInheritedWidget<T>?;
+    final inheritedElement = getElementForInheritedWidgetOfExactType<_RegistrarInheritedWidget<T>>();
     if (inheritedElement == null) {
-      throw Exception('No scoped Registrar widget found with type $T');
+      throw Exception('No inherited Registrar widget found with type $T');
     }
-    return inheritedElement.instance;
+    final widget = inheritedElement.widget as _RegistrarInheritedWidget<T>;
+    return widget.instance;
+  }
+
+  /// Searches for a [Registrar] widget with [inherited] param set and a model of type [T] and creates dependency.
+  ///
+  /// usage:
+  ///
+  ///     final myModel = context.listenTo<MyModel>();
+  ///
+  /// The search is for the first match up the widget tree from the calling widget.
+  /// Sets up a dependency between the [Registrar] widget and the context. For no dependency, use [get].
+  /// Performs a lazy initialization if necessary. Throws exception of widget not found.
+  /// For those familiar with Provider, [listenTo] is effectively `Provider.of<MyModel>();`.
+  /// An exception is thrown if [T] is not a [ChangeNotifier].
+  T listenTo<T extends ChangeNotifier>({VoidCallback? listener}) {
+    final _RegistrarInheritedWidget<T>? inheritedWidget = dependOnInheritedWidgetOfExactType<_RegistrarInheritedWidget<T>>();
+    assert(inheritedWidget != null, 'No inherited Registrar found in context');
+    return inheritedWidget!.instance;
   }
 }
 
@@ -186,29 +224,51 @@ class _LazyInitializer<T extends Object> {
   _LazyInitializer(this._builder, this._instance);
   final T Function()? _builder;
   T? _instance;
+  bool get hasInitialized => _instance != null;
   T get instance => _instance == null ? _instance = _builder!() : _instance!;
 }
 
+/// Optional InheritedWidget class.
+///
+/// updateShouldNotify always returns true, so all dependent childer build when
+/// If [T] is a ChangeNotifier, [changeNotifierListener] is added a listener. Typically, this listener just calls setState to
+/// rebuild.
 class _RegistrarInheritedWidget<T extends Object> extends InheritedWidget {
   _RegistrarInheritedWidget({
     Key? key,
     T Function()? builder,
-    T? instance,
+    required this.changeNotifierListener,
+    required this.shouldRebuildInheritedWidget,
     required Widget child,
-  })  : _lazyInitializer = _LazyInitializer(builder, instance),
+  })  : _lazyInitializer = _LazyInitializer(builder, null),
         super(key: key, child: child);
 
+  final VoidCallback changeNotifierListener;
+  final bool shouldRebuildInheritedWidget;
   late final _LazyInitializer<T> _lazyInitializer;
-  T get instance => _lazyInitializer.instance;
 
-  static _RegistrarInheritedWidget of(BuildContext context) {
-    final _RegistrarInheritedWidget? result = context.dependOnInheritedWidgetOfExactType<_RegistrarInheritedWidget>();
-    assert(result != null, 'No Registrar with scope found in context');
-    return result!;
+  /// Get the instance
+  ///
+  /// If the instance not initialized yet, then it also hasn't added the [changeNotifierListener] listener, so add it.
+  T get instance {
+    if (!_lazyInitializer.hasInitialized) {
+      if (_lazyInitializer.instance is ChangeNotifier) {
+        (_lazyInitializer.instance as ChangeNotifier).addListener(changeNotifierListener);
+      }
+    }
+    return _lazyInitializer.instance;
   }
 
+  // Rich, I don't think we're doing the "of" thing
+  // static _RegistrarInheritedWidget<T> of<T extends Object>(BuildContext context) {
+  //   final _RegistrarInheritedWidget<T>? result =
+  //       context.dependOnInheritedWidgetOfExactType<_RegistrarInheritedWidget<T>>();
+  //   assert(result != null, 'No Registrar with scope found in context');
+  //   return result!;
+  // }
+
   @override
-  bool updateShouldNotify(_RegistrarInheritedWidget oldWidget) => false;
+  bool updateShouldNotify(_RegistrarInheritedWidget oldWidget) => shouldRebuildInheritedWidget;
 }
 
 /// Register multiple [Object]s so they can be retrieved with [Registrar.get]

@@ -18,12 +18,14 @@ const _namedStringUpdated = 'Named Updated';
 /// [registerViewModel] true to register [MyTestWidgetViewModel]
 /// [viewModelName] is option name of registered [MyTestWidgetViewModel]
 Widget testApp({
+  required bool scoped,
   required bool listenToRegistrar,
 }) =>
     MaterialApp(
       home: Registrar(
         builder: () => MyModel(),
-        child: MyTestWidget(listenToRegistrar: listenToRegistrar),
+        inherited: scoped,
+        child: MyObserverWidget(scoped: scoped, listenToRegistrar: listenToRegistrar),
       ),
     );
 
@@ -38,23 +40,36 @@ class MyModel extends ChangeNotifier {
   }
 }
 
-class MyTestWidget extends StatelessWidget {
-  const MyTestWidget({
+class MyObserverWidget extends StatelessWidget {
+  const MyObserverWidget({
     super.key,
-    required bool listenToRegistrar,
+    required this.scoped,
+    required this.listenToRegistrar,
   });
 
+  final bool scoped;
+  final bool listenToRegistrar;
+
+  MyModel getModel(BuildContext context) {
+    return scoped ? context.get<MyModel>() : Registrar.get<MyModel>();
+  }
+
+  MyModel listenToModel(BuildContext context) {
+    return listenToRegistrar ? context.listenTo<MyModel>() : Registrar.get<MyModel>();
+  }
+
   @override
-  Widget build(BuildContext _) {
+  Widget build(BuildContext context) {
+    final myModel = listenToRegistrar ? listenToModel(context) : getModel(context);
     // final float = listenTo<Property<double>>(notifier: get<MyModel>().myFloatProperty).value;
     return Column(
-      children: const <Widget>[
-        Text('$_number'),
+      children: <Widget>[
+        OutlinedButton(onPressed: () => myModel.incrementNumber(), child: const Text('increment number')),
+        Text('${myModel.number}'),
       ],
     );
   }
 }
-
 
 void main() {
   setUp(() {
@@ -68,67 +83,70 @@ void main() {
   });
 
   group('MyTestWidget', () {
-    testWidgets('not listening to Registrar, not registered, and not named ViewModel does not update value',
-            (WidgetTester tester) async {
-          await tester.pumpWidget(testApp(listenToRegistrar: false));
+    testWidgets('not listening to unscoped Registrar does not rebuild widget', (WidgetTester tester) async {
+      await tester.pumpWidget(testApp(scoped: false, listenToRegistrar: false));
 
-          expect(Registrar.isRegistered<MyModel>(), true);
-          expect(find.text('$_number'), findsOneWidget);
+      expect(Registrar.isRegistered<MyModel>(), true);
+      expect(find.text('$_number'), findsOneWidget);
 
-          Registrar.get<MyModel>().incrementNumber();
-          await tester.pump();
+      Registrar.get<MyModel>().incrementNumber();
+      await tester.pump();
 
-          // expect does not increment b/c not listening
-          expect(find.text('$_number'), findsOneWidget);
-        });
+      // expect does not increment b/c not listening
+      expect(find.text('$_number'), findsOneWidget);
+    });
 
-    testWidgets('listening to Registrar but not registered ViewModel shows correct values',
-            (WidgetTester tester) async {
-          await tester.pumpWidget(testApp(listenToRegistrar: true));
+    testWidgets('scoped Registrar is not registered', (WidgetTester tester) async {
+      expect(Registrar.isRegistered<MyModel>(), false);
+      await tester.pumpWidget(testApp(scoped: true, listenToRegistrar: false));
 
-          expect(Registrar.isRegistered<MyModel>(), true);
-          expect(find.text('$_number'), findsOneWidget);
+      expect(Registrar.isRegistered<MyModel>(), false);
+      expect(find.text('$_number'), findsOneWidget);
 
-          Registrar.get<MyModel>().incrementNumber();
-          await tester.pump();
+      await tester.pump();
 
-          expect(find.text('${_number + 1}'), findsOneWidget);
-        });
+      // expect does not increment b/c not listening
+      expect(find.text('$_number'), findsOneWidget);
+    });
 
-    testWidgets('listening to Registrar and registered ViewModel  but not named ViewModel shows correct values',
-            (WidgetTester tester) async {
-          await tester.pumpWidget(testApp(listenToRegistrar: true));
+    testWidgets('listening scoped Registrar updates value', (WidgetTester tester) async {
+      expect(Registrar.isRegistered<MyModel>(), false);
+      await tester.pumpWidget(testApp(scoped: true, listenToRegistrar: true));
 
-          // expect default values
-          expect(find.text('$_number'), findsOneWidget);
-          expect(find.text(_stringDefault), findsOneWidget);
-          expect(find.text(_registeredStringDefault), findsOneWidget);
-          expect(find.text(_namedStringDefault), findsOneWidget);
-          expect(find.text('$_floatDefault'), findsOneWidget);
+      expect(find.text('$_number'), findsOneWidget);
 
-          // change values
-          Registrar.get<MyModel>().incrementNumber();
+      await tester.tap(find.byType(OutlinedButton));
+      await tester.pump();
 
-          await tester.pump();
+      // expect does not increment b/c not listening
+      expect(find.text('${_number+1}'), findsOneWidget);
+    });
 
-          // expect updated values
-          expect(find.text('${_number + 1}'), findsOneWidget);
-          expect(find.text(_stringUpdated), findsOneWidget);
-          expect(find.text(_registeredStringUpdated), findsOneWidget);
-          expect(find.text(_namedStringUpdated), findsOneWidget);
-          expect(find.text('$_floatUpdated'), findsOneWidget);
-        });
+    testWidgets(
+      'listening to Registrar and registered ViewModel  but Model shows correct values',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(testApp(scoped: false, listenToRegistrar: true));
 
-    testWidgets('listening to Registrar, registered and named ViewModel shows correct values',
-            (WidgetTester tester) async {
-          await tester.pumpWidget(testApp(listenToRegistrar: true));
+        // expect default values
+        expect(find.text('$_number'), findsOneWidget);
+        expect(find.text(_stringDefault), findsOneWidget);
+        expect(find.text(_registeredStringDefault), findsOneWidget);
+        expect(find.text(_namedStringDefault), findsOneWidget);
+        expect(find.text('$_floatDefault'), findsOneWidget);
 
-          expect(find.text('$_number'), findsOneWidget);
+        // change values
+        Registrar.get<MyModel>().incrementNumber();
 
-          Registrar.get<MyModel>().incrementNumber();
-          await tester.pump();
+        await tester.pump();
 
-          expect(find.text('${_number + 1}'), findsOneWidget);
-        });
+        // expect updated values
+        // expect(find.text('${_number + 1}'), findsOneWidget);
+        expect(find.text(_stringUpdated), findsOneWidget);
+        expect(find.text(_registeredStringUpdated), findsOneWidget);
+        expect(find.text(_namedStringUpdated), findsOneWidget);
+        expect(find.text('$_floatUpdated'), findsOneWidget);
+      },
+      skip: true,
+    );
   });
 }
