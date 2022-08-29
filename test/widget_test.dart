@@ -30,6 +30,8 @@ Widget testApp({
     );
 
 class MyModel extends ChangeNotifier {
+  MyModel();
+
   int number = _number;
 
   final myFloatProperty = ValueNotifier<double>(_floatDefault);
@@ -71,6 +73,7 @@ class MyObserverWidget extends StatelessWidget {
   }
 }
 
+// Rich, need more widget tests to exercise inherited param
 void main() {
   setUp(() {
     /// Ensure no residuals
