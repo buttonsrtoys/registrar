@@ -141,10 +141,7 @@ class Registrar<T extends Object> extends StatefulWidget {
 }
 
 class _RegistrarState<T extends Object> extends State<Registrar<T>> {
-  bool shouldRebuildInheritedWidget = false;
   late _LazyInitializer<T> lazyInitializer;
-
-  void rebuildInheritedWidget() => setState(() => shouldRebuildInheritedWidget = true);
 
   @override
   void initState() {
@@ -153,7 +150,7 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> {
       lazyInitializer = _LazyInitializer<T>(
           builder: widget.builder,
           instance: null,
-          onInitialization: (notifier) => (notifier as ChangeNotifier).addListener(rebuildInheritedWidget));
+          onInitialization: (notifier) => (notifier as ChangeNotifier).addListener(() => setState(() {})));
     } else {
       Registrar.register<T>(builder: widget.builder, name: widget.name);
     }
@@ -168,17 +165,10 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> {
   }
 
   @override
-  void didUpdateWidget(covariant Registrar<T> oldWidget) {
-    shouldRebuildInheritedWidget = false;
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
   Widget build(BuildContext context) {
     if (widget.inherited) {
       return _RegistrarInheritedWidget<T>(
         lazyInitializer: lazyInitializer,
-        shouldRebuild: shouldRebuildInheritedWidget,
         child: widget.child,
       );
     } else {
@@ -263,17 +253,15 @@ class _RegistrarInheritedWidget<T extends Object> extends InheritedWidget {
   const _RegistrarInheritedWidget({
     Key? key,
     required this.lazyInitializer,
-    required this.shouldRebuild,
     required Widget child,
   }) : super(key: key, child: child);
 
   final _LazyInitializer<T> lazyInitializer;
-  final bool shouldRebuild;
 
   T get instance => lazyInitializer.instance;
 
   @override
-  bool updateShouldNotify(_RegistrarInheritedWidget oldWidget) => shouldRebuild;
+  bool updateShouldNotify(_RegistrarInheritedWidget oldWidget) => true;
 }
 
 /// Register multiple [Object]s so they can be retrieved with [Registrar.get]
