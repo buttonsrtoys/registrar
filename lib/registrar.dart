@@ -177,7 +177,7 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> {
   }
 }
 
-/// Adds [get] and [listenTo] features to BuildContext.
+/// Adds [get] and [of] features to BuildContext.
 extension RegistrarBuildContextExtension on BuildContext {
   /// Searches for a [Registrar] widget with [inherited] param set and a model of type [T].
   ///
@@ -186,7 +186,7 @@ extension RegistrarBuildContextExtension on BuildContext {
   ///     final myService = context.get<MyService>();
   ///
   /// The search is for the first match up the widget tree from the calling widget.
-  /// This does not set up a dependency between the InheritedWidget and the context. For that, use [listenTo].
+  /// This does not set up a dependency between the InheritedWidget and the context. For that, use [of].
   /// Performs a lazy initialization if necessary. Throws exception of widget not found.
   /// For those familiar with Provider, [get] is effectively `Provider.of<MyModel>(listen: false);`.
   T get<T extends Object>() {
@@ -202,18 +202,18 @@ extension RegistrarBuildContextExtension on BuildContext {
   ///
   /// usage:
   ///
-  ///     final myModel = context.listenTo<MyModel>();
+  ///     final myModel = context.of<MyModel>();
   ///
   /// The search is for the first match up the widget tree from the calling widget.
   /// Sets up a dependency between the [Registrar] widget and the context. For no dependency, use [get].
   /// Performs a lazy initialization if necessary. Throws exception of widget not found.
-  /// For those familiar with Provider, [listenTo] is effectively `Provider.of<MyModel>();`.
+  /// For those familiar with Provider, [of] is effectively `Provider.of<MyModel>();`.
   /// An exception is thrown if [T] is not a [ChangeNotifier].
-  T listenTo<T extends ChangeNotifier>() {
+  T of<T extends ChangeNotifier>() {
     final _RegistrarInheritedWidget<T>? inheritedWidget =
         dependOnInheritedWidgetOfExactType<_RegistrarInheritedWidget<T>>();
     if (inheritedWidget == null) {
-      throw Exception('BuildContext.listenTo<T>() did not find inherited widget Registrar<$T>(inherited: true)');
+      throw Exception('BuildContext.of<T>() did not find inherited widget Registrar<$T>(inherited: true)');
     }
     return inheritedWidget.instance;
   }
@@ -386,6 +386,24 @@ abstract class Observer {
   ///
   /// If [notifier] is null, a registered ChangeNotifier is retrieved with
   /// type [T] and [name], where [name] is the optional name assigned to the ChangeNotifier when it was registered.
+  //
+  // // Rich, this is too long.
+  // final myModel = listenTo<MyModel>(notifier: context.get<MyModel>(), listener: myListener);
+  //
+  // // So, do this:
+  // // Add listener to inherited model
+  // final myModel = listenTo<MyModel>(context: context, listener: myListener);
+  //
+  // // Add listener to registered model
+  // final myModel = listenTo<MyModel>(listener: myListener);
+  //
+  // // Last, instead of
+  // Registrar.register<MyModel>(instance: context.get<MyModel>());
+  // Registrar.unregister<MyModel>();
+  //
+  // // do:
+  // register<MyModel>(context: context);
+  // unregister<MyModel>();
   @protected
   T listenTo<T extends ChangeNotifier>({T? notifier, String? name, required void Function() listener}) {
     assert(notifier == null || name == null, 'listenTo can only receive parameters "instance" or "name" but not both.');

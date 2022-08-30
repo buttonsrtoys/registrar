@@ -49,10 +49,10 @@ class MyObserverWidget extends StatefulWidget {
 class _MyObserverWidgetState extends State<MyObserverWidget> with Observer {
   MyModel getModel(BuildContext context) {
     return widget.inherited ? context.get<MyModel>() : Registrar.get<MyModel>();
-  }
+ }
 
   MyModel listenToModel(BuildContext context) {
-    return widget.inherited ? context.listenTo<MyModel>() : listenTo<MyModel>(listener: () => setState(() {}));
+    return widget.inherited ? context.of<MyModel>() : listenTo<MyModel>(listener: () => setState(() {}));
   }
 
   @override
