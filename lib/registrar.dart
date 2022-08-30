@@ -246,7 +246,7 @@ class _LazyInitializer<T extends Object> {
 
 /// Optional InheritedWidget class.
 ///
-/// updateShouldNotify always returns true, so all dependent childer build when
+/// updateShouldNotify always returns true, so all dependent children build when
 /// If [T] is a ChangeNotifier, [changeNotifierListener] is added a listener. Typically, this listener just calls setState to
 /// rebuild.
 class _RegistrarInheritedWidget<T extends Object> extends InheritedWidget {
