@@ -140,10 +140,10 @@ class Registrar<T extends Object> extends StatefulWidget {
 }
 
 class _RegistrarState<T extends Object> extends State<Registrar<T>> {
-  bool shouldBuildInheritedWidget = false;
+  bool shouldRebuildInheritedWidget = false;
   late _LazyInitializer<T> lazyInitializer;
 
-  void rebuildInheritedWidget() => setState(() => shouldBuildInheritedWidget = true);
+  void rebuildInheritedWidget() => setState(() => shouldRebuildInheritedWidget = true);
 
   @override
   void initState() {
@@ -158,7 +158,6 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> {
 
   @override
   void dispose() {
-    // Rich, do we need to dispose inherited change notifiers here?
     if (!widget.inherited) {
       Registrar.unregister<T>(name: widget.name, dispose: widget.dispose);
     }
@@ -167,7 +166,7 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> {
 
   @override
   void didUpdateWidget(covariant Registrar<T> oldWidget) {
-    shouldBuildInheritedWidget = false;
+    shouldRebuildInheritedWidget = false;
     super.didUpdateWidget(oldWidget);
   }
 
@@ -176,7 +175,7 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> {
     if (widget.inherited) {
       return _RegistrarInheritedWidget<T>(
         lazyInitializer: lazyInitializer,
-        shouldRebuild: shouldBuildInheritedWidget,
+        shouldRebuild: shouldRebuildInheritedWidget,
         child: widget.child,
       );
     } else {
@@ -217,11 +216,13 @@ extension RegistrarBuildContextExtension on BuildContext {
   /// Performs a lazy initialization if necessary. Throws exception of widget not found.
   /// For those familiar with Provider, [listenTo] is effectively `Provider.of<MyModel>();`.
   /// An exception is thrown if [T] is not a [ChangeNotifier].
-  T listenTo<T extends ChangeNotifier>({VoidCallback? listener}) {
+  T listenTo<T extends ChangeNotifier>() {
     final _RegistrarInheritedWidget<T>? inheritedWidget =
         dependOnInheritedWidgetOfExactType<_RegistrarInheritedWidget<T>>();
-    assert(inheritedWidget != null, 'No inherited Registrar found in context');
-    return inheritedWidget!.instance;
+    if (inheritedWidget == null) {
+      throw Exception('BuildContext.listenTo<T>() did not find inherited widget Registrar<$T>(inherited: true)');
+    }
+    return inheritedWidget.instance;
   }
 }
 
@@ -399,13 +400,13 @@ abstract class Observer {
   @protected
   T listenTo<T extends ChangeNotifier>({T? notifier, String? name, required void Function() listener}) {
     assert(notifier == null || name == null, 'listenTo can only receive parameters "instance" or "name" but not both.');
-    final notifierToAdd = notifier ?? Registrar.get<T>(name: name);
-    final subscription = _Subscription(changeNotifier: notifierToAdd, listener: listener);
+    final notifierInstance = notifier ?? Registrar.get<T>(name: name);
+    final subscription = _Subscription(changeNotifier: notifierInstance, listener: listener);
     if (!_subscriptions.contains(subscription)) {
       subscription.subscribe();
       _subscriptions.add(subscription);
     }
-    return notifierToAdd;
+    return notifierInstance;
   }
 
   /// Cancel all listener subscriptions.
