@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 
 /// A widget that registers singletons lazily
@@ -374,6 +375,65 @@ class _RegistryEntry {
   late final _LazyInitializer _lazyInitializer;
   bool get hasInitialized => _lazyInitializer.hasInitialized;
   Object get instance => _lazyInitializer.instance;
+}
+
+/// Implements observer pattern.
+abstract class Observer {
+  final _subscriptions = <_Subscription>[];
+
+  /// Adds a listener (i.e., 'subscribes') to a ChangeNotifier.
+  ///
+  /// [notifier] is an optional instance to listen to. A common use case for passing [notifier] is using [get] to
+  /// retrieve a registered object and listening to one of its ValueNotifiers:
+  ///
+  ///     // Get (but don't listen to) an object
+  ///     final cloudService = get<CloudService>();
+  ///
+  ///     // listen to one of its ValueNotifiers
+  ///     final user = listenTo<ValueNotifier<User>>(notifier: cloudService.currentUser).value;
+  ///
+  /// [listener] is the listener to be added. A check is made to ensure the [listener] is only added once.
+  ///
+  /// If [notifier] is null, a registered ChangeNotifier is retrieved with
+  /// type [T] and [name], where [name] is the optional name assigned to the ChangeNotifier when it was registered.
+  @protected
+  T listenTo<T extends ChangeNotifier>({T? notifier, String? name, required void Function() listener}) {
+    assert(notifier == null || name == null, 'listenTo can only receive parameters "instance" or "name" but not both.');
+    final notifierToAdd = notifier ?? Registrar.get<T>(name: name);
+    final subscription = _Subscription(changeNotifier: notifierToAdd, listener: listener);
+    if (!_subscriptions.contains(subscription)) {
+      subscription.subscribe();
+      _subscriptions.add(subscription);
+    }
+    return notifierToAdd;
+  }
+
+  /// Cancel all listener subscriptions.
+  ///
+  /// Note that subscriptions are not automatically managed. E.g., [cancelSubscriptions] is not called when this class is
+  /// disposed. Instead, [cancelSubscriptions] is typically called from a dispose function of a ChangeNotifier or
+  /// StatefulWidget.
+  void cancelSubscriptions() {
+    for (final subscription in _subscriptions) {
+      subscription.unsubscribe();
+    }
+    _subscriptions.clear();
+  }
+}
+
+/// Manages a listener that subscribes to a ChangeNotifier
+class _Subscription extends Equatable {
+  const _Subscription({required this.changeNotifier, required this.listener});
+
+  final void Function() listener;
+  final ChangeNotifier changeNotifier;
+
+  void subscribe() => changeNotifier.addListener(listener);
+
+  void unsubscribe() => changeNotifier.removeListener(listener);
+
+  @override
+  List<Object?> get props => [changeNotifier, listener];
 }
 
 final _registry = <Type, Map<String?, _RegistryEntry>>{};
