@@ -72,7 +72,8 @@ class Registrar<T extends Object> extends StatefulWidget {
     if (!_registry.containsKey(type)) {
       _registry[type] = <String?, _RegistryEntry>{};
     }
-    _registry[type]![name] = _RegistryEntry(type: type, builder: builder, instance: instance);
+    _registry[type]![name] =
+        _RegistryEntry(type: type, lazyInitializer: _LazyInitializer(builder: builder, instance: instance));
   }
 
   /// Unregister an [Object] so that it can no longer be retrieved with [Registrar.get]
@@ -149,7 +150,9 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> {
   void initState() {
     super.initState();
     if (widget.inherited) {
-      lazyInitializer = _LazyInitializer<T>(widget.builder, null,
+      lazyInitializer = _LazyInitializer<T>(
+          builder: widget.builder,
+          instance: null,
           onInitialization: (notifier) => (notifier as ChangeNotifier).addListener(rebuildInheritedWidget));
     } else {
       Registrar.register<T>(builder: widget.builder, name: widget.name);
@@ -232,8 +235,10 @@ class _LazyInitializer<T extends Object> {
   ///
   /// [_builder] builds the instance. In cases where object is already initialized, pass [_instance].
   /// [onInitialization] is called after the call to [_builder].
-  _LazyInitializer(this._builder, this._instance, {this.onInitialization})
-      : assert(_builder == null ? _instance != null : _instance == null, 'Can only pass builder or instance.');
+  _LazyInitializer({required T Function()? builder, required T? instance, this.onInitialization})
+      : assert(builder == null ? instance != null : instance == null, 'Can only pass builder or instance.'),
+        _builder = builder,
+        _instance = instance;
   final T Function()? _builder;
   T? _instance;
   final void Function(T)? onInitialization;
@@ -362,18 +367,14 @@ class RegistrarDelegate<T extends Object> {
 ///
 /// The constructor can receive either [instance] or [builder] but not both. Passing [builder] is recommended as it
 /// makes the implementation lazy. I.e., [builder] is executed on the first get.
-// Rich, probably makes sense to pass _LazyInitialize instead. Do a general pass through the code for this after
-// writing more tests.
 class _RegistryEntry {
   _RegistryEntry({
     required Type type,
-    Object Function()? builder,
-    Object? instance,
+    required _LazyInitializer lazyInitializer,
   })  : assert(type != Object, _missingGenericError('constructor _RegistrarEntry', 'Object')),
-        assert(builder == null ? instance != null : instance == null) {
-    _lazyInitializer = _LazyInitializer(builder, instance);
-  }
-  late final _LazyInitializer _lazyInitializer;
+        _lazyInitializer = lazyInitializer;
+
+  final _LazyInitializer _lazyInitializer;
   bool get hasInitialized => _lazyInitializer.hasInitialized;
   Object get instance => _lazyInitializer.instance;
 }
