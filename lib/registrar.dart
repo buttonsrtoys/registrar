@@ -142,6 +142,7 @@ class Registrar<T extends Object> extends StatefulWidget {
 
 class _RegistrarState<T extends Object> extends State<Registrar<T>> {
   late _LazyInitializer<T> lazyInitializer;
+  final isRegisteredInheritedModel = _IsRegisteredInheritedModel();
 
   @override
   void initState() {
@@ -158,7 +159,8 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> {
 
   @override
   void dispose() {
-    if (!widget.inherited) {
+    bool isRegistered() => !widget.inherited || isRegisteredInheritedModel.value;
+    if (isRegistered()) {
       Registrar.unregister<T>(name: widget.name, dispose: widget.dispose);
     }
     super.dispose();
@@ -169,6 +171,7 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> {
     if (widget.inherited) {
       return _RegistrarInheritedWidget<T>(
         lazyInitializer: lazyInitializer,
+        isRegistered: isRegisteredInheritedModel,
         child: widget.child,
       );
     } else {
@@ -179,6 +182,14 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> {
 
 /// Adds [get] and [of] features to BuildContext.
 extension RegistrarBuildContextExtension on BuildContext {
+  _RegistrarInheritedWidget<T> _getInheritedWidget<T extends Object>() {
+    final inheritedElement = getElementForInheritedWidgetOfExactType<_RegistrarInheritedWidget<T>>();
+    if (inheritedElement == null) {
+      throw Exception('No inherited Registrar widget found with type $T');
+    }
+    return inheritedElement.widget as _RegistrarInheritedWidget<T>;
+  }
+
   /// Searches for a [Registrar] widget with [inherited] param set and a model of type [T].
   ///
   /// usage:
@@ -190,25 +201,14 @@ extension RegistrarBuildContextExtension on BuildContext {
   /// Performs a lazy initialization if necessary. Throws exception of widget not found.
   /// For those familiar with Provider, [get] is effectively `Provider.of<MyModel>(listen: false);`.
   T get<T extends Object>() {
-    final inheritedElement = getElementForInheritedWidgetOfExactType<_RegistrarInheritedWidget<T>>();
-    if (inheritedElement == null) {
-      throw Exception('No inherited Registrar widget found with type $T');
-    }
-    final widget = inheritedElement.widget as _RegistrarInheritedWidget<T>;
-    return widget.instance;
+    final inheritedWidget = _getInheritedWidget<T>();
+    return inheritedWidget.instance;
   }
 
-  /// Searches for a [Registrar] widget with [inherited] param set and a model of type [T] and creates dependency.
+  /// Create a dependency with a [Registrar] widget with [inherited] param set and a model of type [T].
   ///
-  /// usage:
-  ///
-  ///     final myModel = context.of<MyModel>();
-  ///
-  /// The search is for the first match up the widget tree from the calling widget.
-  /// Sets up a dependency between the [Registrar] widget and the context. For no dependency, use [get].
-  /// Performs a lazy initialization if necessary. Throws exception of widget not found.
-  /// For those familiar with Provider, [of] is effectively `Provider.of<MyModel>();`.
-  /// An exception is thrown if [T] is not a [ChangeNotifier].
+  /// Same idea as the "of" feature of Provider.of, Theme.of, etc. For no dependency, use [get].
+  /// Performs a lazy initialization if necessary. An exception is thrown if [T] is not a [ChangeNotifier].
   T of<T extends ChangeNotifier>() {
     final _RegistrarInheritedWidget<T>? inheritedWidget =
         dependOnInheritedWidgetOfExactType<_RegistrarInheritedWidget<T>>();
@@ -253,15 +253,22 @@ class _RegistrarInheritedWidget<T extends Object> extends InheritedWidget {
   const _RegistrarInheritedWidget({
     Key? key,
     required this.lazyInitializer,
+    required this.isRegistered,
     required Widget child,
   }) : super(key: key, child: child);
 
   final _LazyInitializer<T> lazyInitializer;
+  final _IsRegisteredInheritedModel isRegistered;
 
   T get instance => lazyInitializer.instance;
 
   @override
   bool updateShouldNotify(_RegistrarInheritedWidget oldWidget) => true;
+}
+
+/// final wrapper for registered inherited models.
+class _IsRegisteredInheritedModel {
+  bool value = false;
 }
 
 /// Register multiple [Object]s so they can be retrieved with [Registrar.get]
@@ -425,7 +432,10 @@ mixin Observer {
   /// descendants only. Occasionally, access is required by a widget that is not a descendant. In such cases, you can
   /// make the inherited model globally available by registering it.
   /// [name] is assigned to the registered model. [name] is NOT used for locating the object.
-  void register<T extends Object>({required BuildContext context, String? name}) {
+  ///
+  /// Registered inherited models are unregister when their corresponding Registrar widget is disposed.
+  void register<T extends Object>(BuildContext context, {String? name}) {
+    context._getInheritedWidget<T>().isRegistered.value = true;
     Registrar.register<T>(instance: context.get<T>(), name: name);
   }
 
@@ -434,7 +444,8 @@ mixin Observer {
   /// [name] is the value given when registering. Note that unlike [Registrar.unregister] this function does not call
   /// the dispose function of the object if it is a ChangeNotifier because it is unregistering an instance that still
   /// exists in the widget tree. I.e., it was created with Registrar(inherited: true).
-  void unregister<T extends Object>({String? name}) {
+  void unregister<T extends Object>(BuildContext context, {String? name}) {
+    context._getInheritedWidget<T>().isRegistered.value = false;
     Registrar.unregister<T>(name: name, dispose: false);
   }
 
@@ -451,7 +462,7 @@ mixin Observer {
   }
 }
 
-/// Returns 1 if non null. Typically used for asserts.
+/// Returns 1 if non null, 0 if null. Typically used for asserts for counting non-nulls.
 int toOne(Object? object) {
   return object == null ? 0 : 1;
 }
