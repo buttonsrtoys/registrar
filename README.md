@@ -2,18 +2,22 @@
 
 ![registrar logo](https://github.com/buttonsrtoys/registrar/blob/main/assets/RegistrarLogo.png)
 
-A Flutter library that manages a registry of services and ChangeNotifiers. Similar to GetIt, but binds the lifecycles of its registered objects to widgets.
+A Flutter hybrid locator that manages single services (similar to GetIt) AND inherited models (similar to Provider, InheritedWidget). Even supports registering models as services.
 
-Registrar registers and unregisters models using lazy loading. When Registrar widgets are added to the widget tree, they register their models. When they are removed from the tree, they unregister.
+Registrar uses lazy loading, so is performant.
 
 Registrar goals:
-- Provide access to models from anywhere.
+- Locate single services from anywhere.
+- Locate inherited models in the widget tree.
+- Support registering an inherited model as a single service.
 - Work alone or with other state management packages (RxDart, Provider, GetIt, ...).
 - Be scalable and performant, so suitable for both indy and production apps.
 
-## Registering models
+# Single Services
 
-To add a model to the registry, give a builder to a "Registrar" widget and add it to the widget tree:
+Single services are those services where you only need one of them and need to locate them from anywhere in the widget tree.
+
+To add a single service to the registry, give a builder to a "Registrar" widget and add it to the widget tree:
 
 ```dart
 Registrar<MyModel>(
@@ -22,7 +26,21 @@ Registrar<MyModel>(
 );
 ```
 
-The model instance can retrieved from anywhere by type:
+## Adding inherited models (similar to Provider, InheritedWidget)
+
+Adding inherited models to the widget tree uses the same Registrar widget, but add the `inherited` parameter:
+
+```dart
+Registrar<MyModel>(
+  builder: () => MyModel(),
+  inherited: true,
+  child: MyWidget(),
+);
+```
+
+## How to Locate Single Services
+
+The single service instance can located from anywhere by type:
 
 ```dart
 final myModel = Registrar.get<MyModel>();
@@ -75,7 +93,18 @@ Registrar.register<MyModel>(builder: () => MyModel(''))
 
 When Registrar widgets unregister their objects as they are removed from the widget tree, they check if their objects are ChangeNotifiers. If so, the Registrar widgets optionally call the ChangeNotifiers' `dispose` method.
 
-## Example
+# Inherited Models
+
+Inherited models are those models in the widget tree that decendants can locate using the BuildContext.
+
+((Insert mvvm+ docs here))
+
+# Observing Services and Models
+
+Registrar includes an Observer mixin for listening to single services and inherited models.
+
+((Move some mvvm+ docs here and rework))
+# Example
 (The source code for this example is under the Pub.dev "Example" tab and in the GitHub `example/lib/main.dart` file.)
 
 There are three registered services:

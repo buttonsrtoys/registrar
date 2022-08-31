@@ -368,13 +368,20 @@ class _RegistryEntry {
 }
 
 /// Implements observer pattern.
-abstract class Observer {
+mixin Observer {
   final _subscriptions = <_Subscription>[];
 
-  /// Adds a listener (i.e., 'subscribes') to a ChangeNotifier.
+  /// Locates a single service or inherited model and adds a listener ('subscribes') to it.
   ///
-  /// [notifier] is an optional instance to listen to. A common use case for passing [notifier] is using [get] to
-  /// retrieve a registered object and listening to one of its ValueNotifiers:
+  /// The located object must be a ChangeNotifier.
+  ///
+  /// If [context] is passed, the ChangeNotifier is located on the widget tree. If the ChangeNotifier is already
+  /// located, you can pass it to [notifier]. If [context] and [notifier] are null, a registered ChangeNotifier is
+  /// located with type [T] and [name], where [name] is the optional name assigned to the ChangeNotifier when it was
+  /// registered.
+  ///
+  /// A common use case for passing [notifier] is using [get] to retrieve a registered object and listening to one of
+  /// its ValueNotifiers:
   ///
   ///     // Get (but don't listen to) an object
   ///     final cloudService = get<CloudService>();
@@ -383,37 +390,52 @@ abstract class Observer {
   ///     final user = listenTo<ValueNotifier<User>>(notifier: cloudService.currentUser).value;
   ///
   /// [listener] is the listener to be added. A check is made to ensure the [listener] is only added once.
-  ///
-  /// If [notifier] is null, a registered ChangeNotifier is retrieved with
-  /// type [T] and [name], where [name] is the optional name assigned to the ChangeNotifier when it was registered.
-  //
-  // // Rich, this is too long.
-  // final myModel = listenTo<MyModel>(notifier: context.get<MyModel>(), listener: myListener);
-  //
-  // // So, do this:
-  // // Add listener to inherited model
-  // final myModel = listenTo<MyModel>(context: context, listener: myListener);
-  //
-  // // Add listener to registered model
-  // final myModel = listenTo<MyModel>(listener: myListener);
-  //
-  // // Last, instead of
-  // Registrar.register<MyModel>(instance: context.get<MyModel>());
-  // Registrar.unregister<MyModel>();
-  //
-  // // do:
-  // register<MyModel>(context: context);
-  // unregister<MyModel>();
   @protected
-  T listenTo<T extends ChangeNotifier>({T? notifier, String? name, required void Function() listener}) {
-    assert(notifier == null || name == null, 'listenTo can only receive parameters "instance" or "name" but not both.');
-    final notifierInstance = notifier ?? Registrar.get<T>(name: name);
+  T listenTo<T extends ChangeNotifier>(
+      {BuildContext? context, T? notifier, String? name, required void Function() listener}) {
+    assert(toOne(context) + toOne(notifier) + toOne(name) <= 1,
+        'listenTo can only receive non null for "context", "instance", or "name" but not two or more non nulls.');
+    final notifierInstance = context == null ? notifier ?? Registrar.get<T>(name: name) : context.get<T>();
     final subscription = _Subscription(changeNotifier: notifierInstance, listener: listener);
     if (!_subscriptions.contains(subscription)) {
       subscription.subscribe();
       _subscriptions.add(subscription);
     }
     return notifierInstance;
+  }
+
+  /// Gets (but does not listen to) a single service or inherited widget.
+  ///
+  /// If [context] is null, gets a single service from the registry.
+  /// If [context] is non-null, gets an inherited model from an ancestor located by context.
+  /// [name] is the used when locating a single service but not an inherited model.
+  T get<T extends Object>({BuildContext? context, String? name}) {
+    assert(context == null || name == null,
+        '"get" was passed a non-null value for "name" but cannot locate an inherited model by name.');
+    if (context == null) {
+      return Registrar.get<T>(name: name);
+    } else {
+      return context.get<T>();
+    }
+  }
+
+  /// Registers an inherited object.
+  ///
+  /// [register] is a handy but rarely needed function. Registrar(inherited: true) widgets are accessible from their
+  /// descendants only. Occasionally, access is required by a widget that is not a descendant. In such cases, you can
+  /// make the inherited model globally available by registering it.
+  /// [name] is assigned to the registered model. [name] is NOT used for locating the object.
+  void register<T extends Object>({required BuildContext context, String? name}) {
+    Registrar.register<T>(instance: context.get<T>(), name: name);
+  }
+
+  /// Unregisters models registered with [Observer.register].
+  ///
+  /// [name] is the value given when registering. Note that unlike [Registrar.unregister] this function does not call
+  /// the dispose function of the object if it is a ChangeNotifier because it is unregistering an instance that still
+  /// exists in the widget tree. I.e., it was created with Registrar(inherited: true).
+  void unregister<T extends Object>({String? name}) {
+    Registrar.unregister<T>(name: name, dispose: false);
   }
 
   /// Cancel all listener subscriptions.
@@ -427,6 +449,11 @@ abstract class Observer {
     }
     _subscriptions.clear();
   }
+}
+
+/// Returns 1 if non null. Typically used for asserts.
+int toOne(Object? object) {
+  return object == null ? 0 : 1;
 }
 
 /// Manages a listener that subscribes to a ChangeNotifier

@@ -127,5 +127,10 @@ void main() {
 
       expect(find.text('${_number + 1}'), findsOneWidget);
     });
+
+    // Rich, need to test
+    // Observer.register
+    // Observer.unregister
+    // Observer.listenTo(context: context);
   });
 }
