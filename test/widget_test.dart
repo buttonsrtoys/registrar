@@ -54,6 +54,12 @@ class MyObserverWidget extends StatefulWidget {
 }
 
 class _MyObserverWidgetState extends State<MyObserverWidget> with Observer {
+  @override
+  void dispose() {
+    cancelSubscriptions();
+    super.dispose();
+  }
+
   MyModel getModel(BuildContext context) {
     return widget.inherited ? context.get<MyModel>() : Registrar.get<MyModel>();
  }

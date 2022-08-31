@@ -5,11 +5,13 @@ other possible locations and report the results to the developer. E.g.,
 
     'listenTo<MyModel>(context: context)' did not find an inherited model in the widget tree. 
     However, one was found in the registry. Did you mean to call 'listenTo<MyModel>()' (without
-    "context") instead?
+    "context")?
 
 ## Revisit the 'instance' parameter name?
 
-May be confused with other uses of "instance", like GetIt.instance. Maybe "object" or "data"?
+Maybe confused with other uses of "instance", like GetIt.instance. Maybe "object" or "data"?
+
+Maybe OK in the context of the "builder" parameter.
 
 ## Observer.register could be made lazy
 
@@ -20,5 +22,3 @@ use _LazyInitializer and retain the build function. (This is a rarely used funct
 
 When a registry lookup fails, it would be handy to dump the closest matches. E.g., With same type or
 with different type but same name.
-
-This would be a change to Registrar.

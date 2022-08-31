@@ -462,7 +462,7 @@ mixin Observer {
   }
 }
 
-/// Returns 1 if non null, 0 if null. Typically used for asserts for counting non-nulls.
+/// Returns 1 if non null, 0 if null. Typically used for counting non-nulls. E.g., assert(toOne(a) + toOne(b) == 1)
 int toOne(Object? object) {
   return object == null ? 0 : 1;
 }
