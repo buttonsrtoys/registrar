@@ -25,7 +25,9 @@ Registrar<MyModel>(
 );
 ```
 
-## Adding inherited models (similar to Provider, InheritedWidget)
+## Inherited Models 
+
+Inherited models are located on the widget tree (similar to Provider, InheritedWidget). Unlike single services, you can add as many inherited models as you need.
 
 Adding inherited models to the widget tree uses the same Registrar widget, but add the `inherited` parameter:
 
@@ -102,7 +104,7 @@ class MyModel with Observer {
 }
 ```
 
-Models and widgets that use Observer can `listenTo` registered single models:
+Models and widgets that use Observer can `listenTo` registered single services:
 
 ```dart
 final someText = listenTo<MyWidgetViewModel>(listener: myListener).someText;
@@ -113,6 +115,19 @@ And `listenTo` inherited models on the widget tree. (Just add the `context` para
 ```dart
 final someText = listenTo<MyWidgetViewModel>(context: context, listener: myListener).someText;
 ```
+
+For convenience, Observer also adds a `get` function that doesn't required the preceding Registrar class name. Models and widgets that use Observer can get registered single services:
+
+```dart
+final text = get<MyModel>().text;
+```
+
+And get inherited models:
+
+```dart
+final text = get<MyModel>(context: context).text;
+```
+
 # Example
 (The source code for this example is under the Pub.dev "Example" tab and in the GitHub `example/lib/main.dart` file.)
 
