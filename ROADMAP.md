@@ -18,6 +18,9 @@ Maybe OK in the context of the "builder" parameter.
 Observer.register instantiates the inherited model when registering it. This could be refactored to 
 use _LazyInitializer and retain the build function. (This is a rarely used function and a bit of an edge case, so not a high priority.)
 
+While working on this, add error check when Observer.unregister is called, check that the
+_LazyInitializer is the same. I.e., that it wasn't another Observer that registered the model.
+
 ## Add registry output for debugging
 
 When a registry lookup fails, it would be handy to dump the closest matches. E.g., With same type or

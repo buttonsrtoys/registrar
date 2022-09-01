@@ -2,14 +2,13 @@
 
 ![registrar logo](https://github.com/buttonsrtoys/registrar/blob/main/assets/RegistrarLogo.png)
 
-A Flutter hybrid locator that manages single services (similar to GetIt) AND inherited models (similar to Provider, InheritedWidget). Even supports registering models as services.
-
-Registrar uses lazy loading, so is performant.
+A Flutter hybrid locator that manages both single services (similar to GetIt) and inherited models (similar to Provider, InheritedWidget). Supports migrating inherited models to single services.
 
 Registrar goals:
 - Locate single services from anywhere.
 - Locate inherited models in the widget tree.
-- Support registering an inherited model as a single service.
+- Support lazy loading.
+- Support migrating an inherited model to a single service.
 - Work alone or with other state management packages (RxDart, Provider, GetIt, ...).
 - Be scalable and performant, so suitable for both indy and production apps.
 
@@ -93,17 +92,27 @@ Registrar.register<MyModel>(builder: () => MyModel(''))
 
 When Registrar widgets unregister their objects as they are removed from the widget tree, they check if their objects are ChangeNotifiers. If so, the Registrar widgets optionally call the ChangeNotifiers' `dispose` method.
 
-# Inherited Models
-
-Inherited models are those models in the widget tree that decendants can locate using the BuildContext.
-
-((Insert mvvm+ docs here))
-
 # Observing Services and Models
 
-Registrar includes an Observer mixin for listening to single services and inherited models.
+Registrar implements the observer pattern as a mixin that can my added to your models and widgets.
 
-((Move some mvvm+ docs here and rework))
+```dart
+class MyModel with Observer {
+  int counter;
+}
+```
+
+Models and widgets that use Observer can `listenTo` registered single models:
+
+```dart
+final someText = listenTo<MyWidgetViewModel>(listener: myListener).someText;
+```
+
+And `listenTo` inherited models on the widget tree. (Just add the `context` parameter to search the widget tree instead of the registry):
+
+```dart
+final someText = listenTo<MyWidgetViewModel>(context: context, listener: myListener).someText;
+```
 # Example
 (The source code for this example is under the Pub.dev "Example" tab and in the GitHub `example/lib/main.dart` file.)
 
@@ -119,3 +128,4 @@ The first service was added to the widget tree with `Registrar`. The remaining s
 ## That's it! 
 
 If you have questions or suggestions on anything Registrar, please do not hesitate to contact me.
+
