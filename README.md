@@ -77,7 +77,7 @@ MultiRegistrar(
 );
 ```
 
-For use cases where you need to directly manage registering and unregistering models (instead of letting Registrar and MultiRegistrar manage your models), you can use the static `register` and `unregister` functions:
+For rare use cases where you need to directly manage registering and unregistering models (instead of letting Registrar and MultiRegistrar manage your models), you can use the static `register` and `unregister` functions:
 
 ````dart
 Registrar.register<MyModel>(builder: () => MyModel(''))
