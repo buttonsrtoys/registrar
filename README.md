@@ -7,8 +7,9 @@ A Flutter hybrid locator that locates both single services (similar to GetIt) an
 Registrar goals:
 - Locate single services from anywhere.
 - Locate inherited models in the widget tree.
+- Bind the lifecycle of both single services and inherited models to widgets.
 - Support lazy loading.
-- Support migrating an inherited model to a single service.
+- Support migrating inherited models to single services.
 - Work alone or with other state management packages (RxDart, Provider, GetIt, ...).
 - Be scalable and performant, so suitable for both indy and production apps.
 
@@ -16,7 +17,7 @@ Registrar can be used as a standalone locator or integrated into state managemen
 
 ## Single Services
 
-Single services are those services where you only need one and need to locate them from anywhere in the widget tree.
+Single services are those single instances that need to located from anywhere in the widget tree.
 
 To add a single service to the registry, give a builder to a Registrar widget and add it to the widget tree:
 
