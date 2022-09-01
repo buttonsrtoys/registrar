@@ -117,6 +117,20 @@ And get inherited models:
 final text = get<MyModel>(context: context).text;
 ```
 
+# Migrating an Inherited Model to a Registered Service
+
+To make an inherited model on the widget tree visible to widgets on another branch, register the inherited model as a single service:
+
+```dart
+register<MyModel>(context);
+```
+
+After registering, the model will be available both on the widget tree and in the registry. When no longer needed in the registry, simply unregister it:
+
+```dart
+unregister<MyModel>(context);
+```
+
 # Example
 (The source code for this example is under the Pub.dev "Example" tab and in the GitHub `example/lib/main.dart` file.)
 
