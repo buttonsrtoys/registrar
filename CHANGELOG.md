@@ -1,3 +1,6 @@
+## 0.3.0
+Added support for inherited models on the widget tree.
+
 ## 0.2.0
 Added "dispose" boolean to API.
 

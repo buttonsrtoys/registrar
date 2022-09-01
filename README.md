@@ -2,7 +2,7 @@
 
 ![registrar logo](https://github.com/buttonsrtoys/registrar/blob/main/assets/RegistrarLogo.png)
 
-A Flutter hybrid locator that manages both single services (similar to GetIt) and inherited models (similar to Provider, InheritedWidget). Supports migrating inherited models to single services.
+A Flutter hybrid locator that locates both single services (similar to GetIt) and inherited models (similar to Provider, InheritedWidget). Supports migrating inherited models to single services.
 
 Registrar goals:
 - Locate single services from anywhere.
@@ -107,13 +107,13 @@ class MyModel with Observer {
 Models and widgets that use Observer can `listenTo` registered single services:
 
 ```dart
-final someText = listenTo<MyWidgetViewModel>(listener: myListener).someText;
+final text = listenTo<MyWidgetViewModel>(listener: myListener).text;
 ```
 
 And `listenTo` inherited models on the widget tree. (Just add the `context` parameter to search the widget tree instead of the registry):
 
 ```dart
-final someText = listenTo<MyWidgetViewModel>(context: context, listener: myListener).someText;
+final text = listenTo<MyWidgetViewModel>(context: context, listener: myListener).text;
 ```
 
 For convenience, Observer also adds a `get` function that doesn't required the preceding Registrar class name. Models and widgets that use Observer can get registered single services:

@@ -1,3 +1,11 @@
+## Update Example
+
+Add inherited models to the example
+
+## Add inherited models to RegistrarDelegate
+
+Currently only supports single services.
+
 ## Better exception messages when locate fails
 
 When a locate for an inherited model or registered service fails, it would be good to check the
