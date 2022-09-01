@@ -12,7 +12,7 @@ Registrar goals:
 - Work alone or with other state management packages (RxDart, Provider, GetIt, ...).
 - Be scalable and performant, so suitable for both indy and production apps.
 
-# Single Services
+## Single Services
 
 Single services are those services where you only need one of them and need to locate them from anywhere in the widget tree.
 
@@ -29,7 +29,7 @@ Registrar<MyModel>(
 
 Inherited models are located on the widget tree (similar to Provider, InheritedWidget). Unlike single services, you can add as many inherited models as you need.
 
-Adding inherited models to the widget tree uses the same Registrar widget, but add the `inherited` parameter:
+Adding inherited models to the widget tree uses the same Registrar widget, but with the `inherited` parameter:
 
 ```dart
 Registrar<MyModel>(
@@ -94,7 +94,7 @@ Registrar.register<MyModel>(builder: () => MyModel(''))
 
 When Registrar widgets unregister their objects as they are removed from the widget tree, they check if their objects are ChangeNotifiers. If so, the Registrar widgets optionally call the ChangeNotifiers' `dispose` method.
 
-# Observing Services and Models
+## Observing Services and Models
 
 Registrar implements the observer pattern as a mixin that can my added to your models and widgets.
 
