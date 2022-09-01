@@ -2,66 +2,122 @@
 
 ![registrar logo](https://github.com/buttonsrtoys/registrar/blob/main/assets/RegistrarLogo.png)
 
-A Flutter library that manages a registry of services and ChangeNotifiers. Similar to GetIt, but binds the lifecycles of its registered objects to widgets.
-
-Registrar registers and unregisters models using lazy loading. When Registrar widgets are added to the widget tree, they register their models. When they are removed from the tree, they unregister.
+A Flutter hybrid locator that locates both single services (similar to GetIt) and inherited models (similar to Provider, InheritedWidget). Supports migrating inherited models to single services.
 
 Registrar goals:
-- Provide access to models from anywhere.
+- Locate single services from anywhere.
+- Locate inherited models in the widget tree.
+- Support lazy loading.
+- Support migrating an inherited model to a single service.
 - Work alone or with other state management packages (RxDart, Provider, GetIt, ...).
 - Be scalable and performant, so suitable for both indy and production apps.
 
-## Registering models
+## Single Services
 
-To add a model to the registry, give a builder to a "Registrar" widget and add it to the widget tree:
+Single services are those services where you only need one of them and need to locate them from anywhere in the widget tree.
 
-    Registrar<MyModel>(
-      builder: () => MyModel(),
-      child: MyWidget(),
-    );
+To add a single service to the registry, give a builder to a "Registrar" widget and add it to the widget tree:
 
-The model instance can retrieved from anywhere by type:
+```dart
+Registrar<MyModel>(
+  builder: () => MyModel(),
+  child: MyWidget(),
+);
+```
 
-    final myModel = Registrar.get<MyModel>();
+## Inherited Models 
 
-Registrar is lazy, meaning it will not build the model until its first `get`. For times where you already have your instance, you can add that to the registry directly:
+Inherited models are located on the widget tree (similar to Provider, InheritedWidget). Unlike single services, you can add as many inherited models as you need.
 
-    Registrar<MyModel>(
-      instance: myModel,
-      child: MyWidget(),
-    );
+Adding inherited models to the widget tree uses the same Registrar widget, but with the `inherited` parameter:
+
+```dart
+Registrar<MyModel>(
+  builder: () => MyModel(),
+  inherited: true,
+  child: MyWidget(),
+);
+```
+
+Registrar widgets unregister their services and models when they are removed from the widget tree. If their services and models are ChangeNotifiers, the Registrar widgets optionally call the ChangeNotifiers' `dispose` method.
+
+## How to Locate Single Services
+
+The single service instance can located from anywhere by type:
+
+```dart
+final myModel = Registrar.get<MyModel>();
+```
 
 If more than one instance of a model of the same type is needed, you can specify a unique name:
 
-    Registrar<MyModel>(
-      builder: () => MyModel(),
-      name: 'some unique name',
-      child: MyWidget(),
-    );
+```dart
+Registrar<MyModel>(
+  builder: () => MyModel(),
+  name: 'some unique name',
+  child: MyWidget(),
+);
+```
 
 And then get the model by type and name:
 
-    final myModel = Registrar.get<MyModel>(name: 'some unique name');
+```dart
+final myModel = Registrar.get<MyModel>(name: 'some unique name');
+```
 
 Unlimited Registrar widgets can be added to the widget tree. If you want to manage multiple models with a single widget, use MultiRegistrar:
 
-    MultiRegistrar(
-      delegates: [
-        RegistrarDelegate<MyModel>(builder: () => MyModel()),
-        RegistrarDelegate<MyOtherModel>(builder: () => MyOtherModel()),
-      ],
-      child: MyWidget(),
-    );
+```dart
+MultiRegistrar(
+  delegates: [
+    RegistrarDelegate<MyModel>(builder: () => MyModel()),
+    RegistrarDelegate<MyOtherModel>(builder: () => MyOtherModel()),
+  ],
+  child: MyWidget(),
+);
+```
 
-For use cases where you need to directly manage registering and unregistering models (instead of letting Registrar and MultiRegistrar manage your models), you can use the static `register` and `unregister` functions:
+For rare use cases where you need to directly manage registering and unregistering models (instead of letting Registrar and MultiRegistrar manage your models), you can use the static `register` and `unregister` functions:
 
-    Registrar.register<MyModel>(builder: () => MyModel(''))
+````dart
+Registrar.register<MyModel>(builder: () => MyModel(''))
+````
 
-## Unregistering ChangeNotifiers
+## How to Located Inherited Models
 
-In addition to Registrar widgets unregistering objects when they are removed from the widget tree, Registrar widgets also check if the registered objects were ChangeNotifiers. If so, the Registrar widgets optionally call the ChangeNotifiers' `dispose` method.
+Registrar implements the observer pattern as a mixin that can my added to your models and widgets.
 
-## Example
+```dart
+class MyModel with Observer {
+  int counter;
+}
+```
+
+Models and widgets that use Observer can `listenTo` registered single services:
+
+```dart
+final text = listenTo<MyWidgetViewModel>(listener: myListener).text;
+```
+
+And `listenTo` inherited models on the widget tree. (Just add the `context` parameter to search the widget tree instead of the registry):
+
+```dart
+final text = listenTo<MyWidgetViewModel>(context: context, listener: myListener).text;
+```
+
+For convenience, Observer also adds a `get` function that doesn't required the preceding Registrar class name. Models and widgets that use Observer can get registered single services:
+
+```dart
+final text = get<MyModel>().text;
+```
+
+And get inherited models:
+
+```dart
+final text = get<MyModel>(context: context).text;
+```
+
+# Example
 (The source code for this example is under the Pub.dev "Example" tab and in the GitHub `example/lib/main.dart` file.)
 
 There are three registered services:
@@ -76,3 +132,4 @@ The first service was added to the widget tree with `Registrar`. The remaining s
 ## That's it! 
 
 If you have questions or suggestions on anything Registrar, please do not hesitate to contact me.
+
