@@ -119,16 +119,16 @@ final text = get<MyModel>(context: context).text;
 
 # "of"
 
-The `of` function (Theme.of, Provider.of) is known to introduce unnecessary dependencies in apps (and unnecessary builds). So, using `listenTo` is recommended. However, if you are migrating from another library that uses `of` (or simply like using `of`), Registrar includes it as a BuildContext extension:
+The `of` function (Theme.of, Provider.of) is known to introduce unnecessary dependencies in apps (and consequently unnecessary builds). So, using `listenTo` is recommended. However, if you are migrating from another library that uses `of` (or simply like using `of`), Registrar includes `of` in its BuildContext extension:
 
 ```dart
-final text = context.of<MyModel().text;
+final text = context.of<MyModel>().text;
 ```
 
-Or, you get use the context extension to get models without adding a dependency:
+Or, you get use the BuildContext extension to get models without adding a dependency:
 
 ```dart
-final text = context.get<MyModel().text;
+final text = context.get<MyModel>().text;
 ```
 
 # Migrating an Inherited Model to a Registered Service
