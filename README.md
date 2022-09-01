@@ -12,6 +12,8 @@ Registrar goals:
 - Work alone or with other state management packages (RxDart, Provider, GetIt, ...).
 - Be scalable and performant, so suitable for both indy and production apps.
 
+Registrar can be used as a standalone locator or integrated into state management package, like [mvvm+](https://pub.dev/packages/mvvm_plus).
+
 ## Single Services
 
 Single services are those services where you only need one and need to locate them from anywhere in the widget tree.
@@ -93,13 +95,13 @@ class MyModel with Observer {
 }
 ```
 
-Models and widgets that use Observer can `listenTo` registered single services:
+Models and widgets that use Observer can `listenTo` inherited models and registered single services. To listen to single services:
 
 ```dart
 final text = listenTo<MyWidgetViewModel>(listener: myListener).text;
 ```
 
-And `listenTo` inherited models on the widget tree. (Just add the `context` parameter to search the widget tree instead of the registry):
+To listen to inherited models on the widget tree, add the `context` parameter to search the widget tree:
 
 ```dart
 final text = listenTo<MyWidgetViewModel>(context: context, listener: myListener).text;

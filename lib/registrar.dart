@@ -397,6 +397,23 @@ mixin Observer {
   ///     final user = listenTo<ValueNotifier<User>>(notifier: cloudService.currentUser).value;
   ///
   /// [listener] is the listener to be added. A check is made to ensure the [listener] is only added once.
+  ///
+  /// StatefulWidget example:
+  ///
+  ///    class MyWidget extends StatefulWidget {
+  ///      const MyWidget({Key? key}) : super(key: key);
+  ///      @override
+  ///      State<MyWidget> createState() => _MyWidgetState();
+  ///    }
+  ///
+  ///    class _MyWidgetState extends State<MyWidget> with Observable {     // <- with Observable
+  ///      @override
+  ///      Widget build(BuildContext context) {
+  ///        final text = listenTo<MyService>(context: context).text;       // <- listenTo
+  ///        return Text(text);
+  ///      }
+  ///    }
+  ///
   @protected
   T listenTo<T extends ChangeNotifier>(
       {BuildContext? context, T? notifier, String? name, required void Function() listener}) {
