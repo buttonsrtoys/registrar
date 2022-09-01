@@ -39,7 +39,7 @@ Registrar<MyModel>(
 );
 ```
 
-Registrar widgets unregister their objects as they are removed from the widget tree. If their objects are ChangeNotifiers, the Registrar widgets optionally call the ChangeNotifiers' `dispose` method.
+Registrar widgets unregister their services and models when they are removed from the widget tree. If their services and models are ChangeNotifiers, the Registrar widgets optionally call the ChangeNotifiers' `dispose` method.
 
 ## How to Locate Single Services
 
@@ -83,7 +83,7 @@ For use cases where you need to directly manage registering and unregistering mo
 Registrar.register<MyModel>(builder: () => MyModel(''))
 ````
 
-## Observing Services and Models
+## How to Located Inherited Models
 
 Registrar implements the observer pattern as a mixin that can my added to your models and widgets.
 
