@@ -19,8 +19,8 @@ Single services are those services where you only need one of them and need to l
 To add a single service to the registry, give a builder to a "Registrar" widget and add it to the widget tree:
 
 ```dart
-Registrar<MyModel>(
-  builder: () => MyModel(),
+Registrar<MyService>(
+  builder: () => MyService(),
   child: MyWidget(),
 );
 ```
@@ -46,41 +46,41 @@ Registrar widgets unregister their services and models when they are removed fro
 The single service instance can located from anywhere by type:
 
 ```dart
-final myModel = Registrar.get<MyModel>();
+final myService = Registrar.get<MyService>();
 ```
 
-If more than one instance of a model of the same type is needed, you can specify a unique name:
+If more than one instance of a service of the same type is needed, you can specify a unique name:
 
 ```dart
-Registrar<MyModel>(
-  builder: () => MyModel(),
+Registrar<MyService>(
+  builder: () => MyService(),
   name: 'some unique name',
   child: MyWidget(),
 );
 ```
 
-And then get the model by type and name:
+And then get the service by type and name:
 
 ```dart
-final myModel = Registrar.get<MyModel>(name: 'some unique name');
+final myService = Registrar.get<MyService>(name: 'some unique name');
 ```
 
-Unlimited Registrar widgets can be added to the widget tree. If you want to manage multiple models with a single widget, use MultiRegistrar:
+Unlimited Registrar widgets can be added to the widget tree. If you want to manage multiple services with a single widget, use MultiRegistrar:
 
 ```dart
 MultiRegistrar(
   delegates: [
-    RegistrarDelegate<MyModel>(builder: () => MyModel()),
-    RegistrarDelegate<MyOtherModel>(builder: () => MyOtherModel()),
+    RegistrarDelegate<MyService>(builder: () => MyService()),
+    RegistrarDelegate<MyOtherService>(builder: () => MyOtherService()),
   ],
   child: MyWidget(),
 );
 ```
 
-For rare use cases where you need to directly manage registering and unregistering models (instead of letting Registrar and MultiRegistrar manage your models), you can use the static `register` and `unregister` functions:
+For rare use cases where you need to directly manage registering and unregistering services (instead of letting Registrar and MultiRegistrar manage your services), you can use the static `register` and `unregister` functions:
 
 ````dart
-Registrar.register<MyModel>(builder: () => MyModel(''))
+Registrar.register<MyService>(builder: () => MyService())
 ````
 
 ## How to Located Inherited Models
@@ -125,7 +125,7 @@ To make an inherited model on the widget tree visible to widgets on another bran
 register<MyModel>(context);
 ```
 
-After registering, the model will be available both on the widget tree and in the registry. When no longer needed in the registry, simply unregister it:
+After registering, the model will be available from anywhere. When no longer needed in the registry, simply unregister it:
 
 ```dart
 unregister<MyModel>(context);
