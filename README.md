@@ -39,21 +39,14 @@ Registrar<MyModel>(
 );
 ```
 
+Registrar widgets unregister their objects as they are removed from the widget tree. If their objects are ChangeNotifiers, the Registrar widgets optionally call the ChangeNotifiers' `dispose` method.
+
 ## How to Locate Single Services
 
 The single service instance can located from anywhere by type:
 
 ```dart
 final myModel = Registrar.get<MyModel>();
-```
-
-Registrar is lazy, meaning it will not build the model until its first `get`. For times where you already have your instance, you can add that to the registry directly:
-
-```dart
-Registrar<MyModel>(
-  instance: myModel,
-  child: MyWidget(),
-);
 ```
 
 If more than one instance of a model of the same type is needed, you can specify a unique name:
@@ -89,10 +82,6 @@ For use cases where you need to directly manage registering and unregistering mo
 ````dart
 Registrar.register<MyModel>(builder: () => MyModel(''))
 ````
-
-## Unregistering ChangeNotifiers
-
-When Registrar widgets unregister their objects as they are removed from the widget tree, they check if their objects are ChangeNotifiers. If so, the Registrar widgets optionally call the ChangeNotifiers' `dispose` method.
 
 ## Observing Services and Models
 
