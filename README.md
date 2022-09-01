@@ -12,7 +12,7 @@ Registrar goals:
 - Work alone or with other state management packages (RxDart, Provider, GetIt, ...).
 - Be scalable and performant, so suitable for both indy and production apps.
 
-Registrar can be used as a standalone locator or integrated into state management package, like [mvvm+](https://pub.dev/packages/mvvm_plus).
+Registrar can be used as a standalone locator or integrated into state management libraries. [mvvm+](https://pub.dev/packages/mvvm_plus) uses Registrar.
 
 ## Single Services
 
