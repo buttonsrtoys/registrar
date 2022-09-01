@@ -111,10 +111,8 @@ class Registrar<T extends Object> extends StatefulWidget {
     if (_registry[type]!.isEmpty) {
       _registry.remove(type);
     }
-    if (dispose && registryEntry!.hasInitialized) {
-      if (registryEntry.instance is ChangeNotifier) {
-        (registryEntry.instance as ChangeNotifier).dispose();
-      }
+    if (dispose) {
+      registryEntry!.lazyInitializer.dispose();
     }
   }
 
@@ -136,7 +134,7 @@ class Registrar<T extends Object> extends StatefulWidget {
         'Registrar tried to get an instance of type $T with name $name but it is not registered.',
       );
     }
-    return _registry[T]![name]!.instance as T;
+    return _registry[T]![name]!.lazyInitializer.instance as T;
   }
 }
 
@@ -162,6 +160,10 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> {
     bool isRegistered() => !widget.inherited || isRegisteredInheritedModel.value;
     if (isRegistered()) {
       Registrar.unregister<T>(name: widget.name, dispose: widget.dispose);
+    } else {
+      if (widget.dispose) {
+        lazyInitializer.dispose();
+      }
     }
     super.dispose();
   }
@@ -229,10 +231,12 @@ class _LazyInitializer<T extends Object> {
       : assert(builder == null ? instance != null : instance == null, 'Can only pass builder or instance.'),
         _builder = builder,
         _instance = instance;
+
   final T Function()? _builder;
   T? _instance;
   final void Function(T)? onInitialization;
   bool get hasInitialized => _instance != null;
+
   T get instance {
     if (_instance == null) {
       _instance = _builder!();
@@ -241,6 +245,12 @@ class _LazyInitializer<T extends Object> {
       }
     }
     return _instance!;
+  }
+
+  void dispose() {
+    if (hasInitialized && instance is ChangeNotifier) {
+      (instance as ChangeNotifier).dispose();
+    }
   }
 }
 
@@ -365,13 +375,10 @@ class RegistrarDelegate<T extends Object> {
 class _RegistryEntry {
   _RegistryEntry({
     required Type type,
-    required _LazyInitializer lazyInitializer,
-  })  : assert(type != Object, _missingGenericError('constructor _RegistrarEntry', 'Object')),
-        _lazyInitializer = lazyInitializer;
+    required this.lazyInitializer,
+  }) : assert(type != Object, _missingGenericError('constructor _RegistrarEntry', 'Object'));
 
-  final _LazyInitializer _lazyInitializer;
-  bool get hasInitialized => _lazyInitializer.hasInitialized;
-  Object get instance => _lazyInitializer.instance;
+  final _LazyInitializer lazyInitializer;
 }
 
 /// Implements observer pattern.

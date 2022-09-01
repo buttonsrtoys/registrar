@@ -24,10 +24,20 @@ Widget testApp({
       ),
     );
 
+int numberOfModelsThatNeedDispose = 0;
+
 class MyModel extends ChangeNotifier {
-  MyModel();
+  MyModel() {
+    numberOfModelsThatNeedDispose++;
+  }
 
   int number = _number;
+
+  @override
+  void dispose() {
+    numberOfModelsThatNeedDispose--;
+    super.dispose();
+  }
 
   void incrementNumber() {
     number++;
@@ -84,13 +94,12 @@ class _MyObserverWidgetState extends State<MyObserverWidget> with Observer {
 
 void main() {
   setUp(() {
-    /// Ensure no residuals
-    expect(Registrar.isRegistered<MyModel>(), false);
   });
 
   tearDown(() {
     /// Ensure no residuals
     expect(Registrar.isRegistered<MyModel>(), false);
+    expect(numberOfModelsThatNeedDispose, 0);
   });
 
   group('MyTestWidget', () {
