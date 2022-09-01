@@ -14,9 +14,9 @@ Registrar goals:
 
 ## Single Services
 
-Single services are those services where you only need one of them and need to locate them from anywhere in the widget tree.
+Single services are those services where you only need one and need to locate them from anywhere in the widget tree.
 
-To add a single service to the registry, give a builder to a "Registrar" widget and add it to the widget tree:
+To add a single service to the registry, give a builder to a Registrar widget and add it to the widget tree:
 
 ```dart
 Registrar<MyService>(
@@ -27,7 +27,7 @@ Registrar<MyService>(
 
 ## Inherited Models 
 
-Inherited models are located on the widget tree (similar to Provider, InheritedWidget). Unlike single services, you can add as many inherited models as you need.
+Inherited models are located on the widget tree (similar to Provider, InheritedWidget). Unlike single services, you can add as many inherited models of the same type as you need.
 
 Adding inherited models to the widget tree uses the same Registrar widget, but with the `inherited` parameter:
 
@@ -65,7 +65,7 @@ And then get the service by type and name:
 final myService = Registrar.get<MyService>(name: 'some unique name');
 ```
 
-Unlimited Registrar widgets can be added to the widget tree. If you want to manage multiple services with a single widget, use MultiRegistrar:
+When you want to manage multiple services with a single widget, use MultiRegistrar:
 
 ```dart
 MultiRegistrar(
@@ -115,6 +115,20 @@ And get inherited models:
 
 ```dart
 final text = get<MyModel>(context: context).text;
+```
+
+# "of"
+
+The `of` function (Theme.of, Provider.of) is known to introduce unnecessary dependencies in apps (and unnecessary builds). So, using `listenTo` is recommended. However, if you are migrating from another library that uses `of` (or simply like using `of`), Registrar includes it as a BuildContext extension:
+
+```dart
+final text = context.of<MyModel().text;
+```
+
+Or, you get use the context extension to get models without adding a dependency:
+
+```dart
+final text = context.get<MyModel().text;
 ```
 
 # Migrating an Inherited Model to a Registered Service
