@@ -4,38 +4,18 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:registrar/registrar.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() => runApp(myApp());
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+Widget myApp() => MaterialApp(home: Registrar<ColorNotifier>(builder: () => ColorNotifier(), child: const Page()));
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'example',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: Registrar<ColorNotifier>(
-        builder: () => ColorNotifier(),
-        child: const MyHomePage(title: 'example'),
-      ),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  final String title;
+class Page extends StatefulWidget {
+  const Page({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<Page> createState() => _PageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _PageState extends State<Page> with Observer {
   int _counter = 0;
 
   @override
@@ -50,62 +30,40 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
+  void _incrementCounter() => setState(() => _counter++);
 
   @override
   Widget build(BuildContext context) {
     return MultiRegistrar(
-      delegates: [
-        RegistrarDelegate<FortyTwoService>(builder: () => FortyTwoService()),
-        RegistrarDelegate<RandomService>(builder: () => RandomService()),
-      ],
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '$_counter',
-                style: TextStyle(fontSize: 64, color: Registrar.get<ColorNotifier>().color.value),
-              ),
+        delegates: [
+          RegistrarDelegate<FortyTwoService>(builder: () => FortyTwoService()),
+          RegistrarDelegate<RandomService>(builder: () => RandomService()),
+        ],
+        child: Scaffold(
+            body: Center(
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text('$_counter',
+                  style: TextStyle(
+                      fontSize: 64, color: listenTo<ColorNotifier>(listener: () => setState(() {})).color.value)),
               OutlinedButton(
-                onPressed: () => setState(() {
-                  _counter = Registrar.get<RandomService>().number;
-                }),
-                child: const Text('Set Random'),
-              ),
+                  onPressed: () => setState(() => _counter = Registrar.get<RandomService>().number),
+                  child: const Text('Set Random')),
               OutlinedButton(
-                onPressed: () => setState(() {
-                  _counter = Registrar.get<FortyTwoService>().number;
-                }),
-                child: const Text('Set 42'),
-              ),
-            ],
-          ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _incrementCounter,
-          tooltip: 'Increment',
-          child: const Icon(Icons.add),
-        ),
-      ),
-    );
+                  onPressed: () => setState(() => _counter = Registrar.get<FortyTwoService>().number),
+                  child: const Text('Set 42'))
+            ])),
+            floatingActionButton: FloatingActionButton(
+              onPressed: _incrementCounter,
+              child: const Icon(Icons.add),
+            )));
   }
 }
 
 class ColorNotifier extends ChangeNotifier {
   int _counter = 0;
-  final color = ValueNotifier<Color>(Colors.black);
+  late final color = ValueNotifier<Color>(Colors.black)..addListener(notifyListeners);
 
   ColorNotifier() {
-    color.addListener(notifyListeners);
     _timer = Timer.periodic(const Duration(seconds: 2), (_) {
       color.value = <Color>[Colors.orange, Colors.purple, Colors.cyan][++_counter % 3];
     });
