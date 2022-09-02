@@ -2,14 +2,14 @@
 
 ![registrar logo](https://github.com/buttonsrtoys/registrar/blob/main/assets/RegistrarLogo.png)
 
-A Flutter hybrid locator that locates both global services (similar to GetIt) and scoped inherited models (similar to Provider, InheritedWidget). Supports registering inherited models as global services.
+A Flutter hybrid locator that locates both single services (similar to GetIt) and scoped inherited models (similar to Provider, InheritedWidget). Supports registering inherited models as single services.
 
 Registrar goals:
 - Locate single services from anywhere.
 - Locate inherited models in the widget tree.
 - Bind the lifecycle of both single services and inherited models to widgets.
 - Support lazy loading.
-- Support migrating inherited models to single services.
+- Support registering inherited models to single services.
 - Work alone or with other state management packages (RxDart, Provider, GetIt, ...).
 - Be scalable and performant, so suitable for both indy and production apps.
 
@@ -134,7 +134,7 @@ Or, you get use the BuildContext extension to get models without adding a depend
 final text = context.get<MyModel>().text;
 ```
 
-# Migrating an Inherited Model to a Registered Service
+# Registering an Inherited Model as a Single Service
 
 To make an inherited model on the widget tree visible to widgets on another branch, register the inherited model as a single service:
 
