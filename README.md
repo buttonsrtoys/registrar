@@ -2,7 +2,7 @@
 
 ![registrar logo](https://github.com/buttonsrtoys/registrar/blob/main/assets/RegistrarLogo.png)
 
-A Flutter hybrid locator that locates both single services (similar to GetIt) and inherited models (similar to Provider, InheritedWidget). Supports migrating inherited models to single services.
+A Flutter hybrid locator that locates both global services (similar to GetIt) and scoped inherited models (similar to Provider, InheritedWidget). Supports registering inherited models as global services.
 
 Registrar goals:
 - Locate single services from anywhere.

@@ -1,3 +1,6 @@
+## 0.3.1
+Fixed bug where dispose not call omitted.
+
 ## 0.3.0
 Added support for inherited models on the widget tree.
 
