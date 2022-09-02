@@ -2,14 +2,14 @@
 
 ![registrar logo](https://github.com/buttonsrtoys/registrar/blob/main/assets/RegistrarLogo.png)
 
-A Flutter hybrid locator that locates both single services (similar to GetIt) and scoped inherited models (similar to Provider, InheritedWidget). Supports registering inherited models as single services.
+A Flutter hybrid locator that locates both single services (similar to GetIt) and inherited models (similar to Provider, InheritedWidget). Supports registering inherited models as single services.
 
 Registrar goals:
 - Locate single services from anywhere.
 - Locate inherited models in the widget tree.
 - Bind the lifecycle of both single services and inherited models to widgets.
 - Support lazy loading.
-- Support registering inherited models to single services.
+- Support registering inherited models as single services.
 - Work alone or with other state management packages (RxDart, Provider, GetIt, ...).
 - Be scalable and performant, so suitable for both indy and production apps.
 
@@ -96,7 +96,7 @@ class MyModel with Observer {
 }
 ```
 
-Models and widgets that use Observer can `listenTo` inherited models and registered single services. To listen to single services:
+Models and widgets that use Observer can `listenTo` inherited models and single services. To listen to single services:
 
 ```dart
 final text = listenTo<MyWidgetViewModel>(listener: myListener).text;
@@ -108,7 +108,7 @@ To listen to inherited models on the widget tree, add the `context` parameter to
 final text = listenTo<MyWidgetViewModel>(context: context, listener: myListener).text;
 ```
 
-For convenience, Observer also adds a `get` function that doesn't required the preceding Registrar class name. Models and widgets that use Observer can get registered single services:
+For convenience, Observer also adds a `get` function that doesn't required the preceding Registrar class name. Models and widgets that use Observer can get single services:
 
 ```dart
 final text = get<MyModel>().text;
@@ -120,7 +120,7 @@ And get inherited models:
 final text = get<MyModel>(context: context).text;
 ```
 
-# "of"
+# .of
 
 The `of` function (Theme.of, Provider.of) is known to introduce unnecessary dependencies in apps (and consequently unnecessary builds). So, using `listenTo` is recommended. However, if you are migrating from another library that uses `of` (or simply like using `of`), Registrar includes `of` in its BuildContext extension:
 
@@ -136,7 +136,7 @@ final text = context.get<MyModel>().text;
 
 # Registering an Inherited Model as a Single Service
 
-To make an inherited model on the widget tree visible to widgets on another branch, register the inherited model as a single service:
+To make an inherited model on the widget tree visible to widgets on other branches, register the inherited model as a single service:
 
 ```dart
 register<MyModel>(context);
