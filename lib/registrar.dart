@@ -138,46 +138,75 @@ class Registrar<T extends Object> extends StatefulWidget {
   }
 }
 
-class _RegistrarState<T extends Object> extends State<Registrar<T>> {
-  late _LazyInitializer<T> lazyInitializer;
-  final isRegisteredInheritedModel = _IsRegisteredInheritedModel();
-
+class _RegistrarState<T extends Object> extends State<Registrar<T>> with RegistrarStateImpl<T> {
   @override
   void initState() {
     super.initState();
-    if (widget.inherited) {
-      lazyInitializer = _LazyInitializer<T>(
-          builder: widget.builder,
-          instance: null,
-          onInitialization: (notifier) => (notifier as ChangeNotifier).addListener(() => setState(() {})));
-    } else {
-      Registrar.register<T>(builder: widget.builder, name: widget.name);
-    }
+    initStateImpl(
+        isInherited: widget.inherited,
+        isRegistered: !widget.inherited,
+        builder: widget.builder,
+        name: widget.name,
+        onInitialization: (notifier) => (notifier as ChangeNotifier).addListener(() => setState(() {})));
   }
 
   @override
   void dispose() {
-    bool isRegistered() => !widget.inherited || isRegisteredInheritedModel.value;
-    if (isRegistered()) {
-      Registrar.unregister<T>(name: widget.name, dispose: widget.dispose);
-    } else {
-      if (widget.dispose) {
-        lazyInitializer.dispose();
-      }
-    }
+    disposeImpl(isRegistered: !widget.inherited, name: widget.name, shouldDispose: widget.dispose);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.inherited) {
+    return buildImpl(context, isInherited: widget.inherited, child: widget.child);
+  }
+}
+
+mixin RegistrarStateImpl<T extends Object> {
+  late _LazyInitializer<T> _lazyInitializer;
+  final isRegisteredInheritedModel = _IsRegisteredInheritedModel();
+
+  void initStateImpl({
+    required bool isInherited,
+    required bool isRegistered,
+    String? name,
+    T Function()? builder,
+    T? instance,
+    void Function(T)? onInitialization,
+  }) {
+    assert(
+        !isInherited || !isRegistered, 'RegistrarStateImpl does not support declaring both inherited and registered.');
+    if (isInherited) {
+      _lazyInitializer = _LazyInitializer<T>(builder: builder, instance: instance, onInitialization: onInitialization);
+    }
+    if (isRegistered) {
+      Registrar.register<T>(builder: builder, name: name);
+    }
+  }
+
+  void disposeImpl({
+    required bool isRegistered,
+    String? name,
+    required bool shouldDispose,
+  }) {
+    if (isRegistered || isRegisteredInheritedModel.value) {
+      Registrar.unregister<T>(name: name, dispose: shouldDispose);
+    } else {
+      if (shouldDispose) {
+        _lazyInitializer.dispose();
+      }
+    }
+  }
+
+  Widget buildImpl(BuildContext context, {required bool isInherited, required Widget child}) {
+    if (isInherited) {
       return _RegistrarInheritedWidget<T>(
-        lazyInitializer: lazyInitializer,
+        lazyInitializer: _lazyInitializer,
         isRegistered: isRegisteredInheritedModel,
-        child: widget.child,
+        child: child,
       );
     } else {
-      return widget.child;
+      return child;
     }
   }
 }
