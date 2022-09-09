@@ -42,7 +42,7 @@ class Registrar<T extends Object> extends StatefulWidget {
         'Error: Tried to register an instance of type $T with name $name but it is already registered.',
       );
     }
-    _register(type: T, instance: instance, builder: builder, name: name);
+    _register(type: T, lazyInitializer: _LazyInitializer(builder: builder, instance: instance), name: name);
   }
 
   /// Register by runtimeType for when compiled type is not available.
@@ -59,21 +59,20 @@ class Registrar<T extends Object> extends StatefulWidget {
         'Error: Tried to register an instance of type $runtimeType with name $name but it is already registered.',
       );
     }
-    _register(type: runtimeType, instance: instance, name: name);
+    _register(type: runtimeType, lazyInitializer: _LazyInitializer(builder: null, instance: instance), name: name);
   }
 
   /// [type] is not a generic because sometimes runtimeType is required.
   static void _register({
     required Type type,
-    Object? instance,
-    Object Function()? builder,
+    required _LazyInitializer lazyInitializer,
     String? name,
   }) {
     if (!_registry.containsKey(type)) {
       _registry[type] = <String?, _RegistryEntry>{};
     }
     _registry[type]![name] =
-        _RegistryEntry(type: type, lazyInitializer: _LazyInitializer(builder: builder, instance: instance));
+        _RegistryEntry(type: type, lazyInitializer: lazyInitializer);
   }
 
   /// Unregister an [Object] so that it can no longer be retrieved with [Registrar.get]
