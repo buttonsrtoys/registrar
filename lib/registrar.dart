@@ -161,7 +161,7 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> with Registr
 
   @override
   Widget build(BuildContext context) {
-    return buildImpl(context, isInherited: widget.inherited, child: widget.child);
+    return buildImpl(isInherited: widget.inherited, child: widget.child);
   }
 }
 
@@ -197,7 +197,7 @@ mixin RegistrarStateImpl<T extends Object> {
     }
   }
 
-  Widget buildImpl(BuildContext context, {required bool isInherited, required Widget child}) {
+  Widget buildImpl({required bool isInherited, required Widget child}) {
     if (isInherited) {
       return _RegistrarInheritedWidget<T>(
         lazyInitializer: _lazyInitializer,
