@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 
-/// A widget that registers singletons lazily
+/// A widget that registers single services lazily
 ///
 /// The lifecycle of the [T] object is bound to this widget. The object is registered when this widget is added to the
 /// widget tree and unregistered when removed. If [T] is of type [ChangeNotifier] then its [ChangeNotifier.dispose]
@@ -71,8 +71,7 @@ class Registrar<T extends Object> extends StatefulWidget {
     if (!_registry.containsKey(type)) {
       _registry[type] = <String?, _RegistryEntry>{};
     }
-    _registry[type]![name] =
-        _RegistryEntry(type: type, lazyInitializer: lazyInitializer);
+    _registry[type]![name] = _RegistryEntry(type: type, lazyInitializer: lazyInitializer);
   }
 
   /// Unregister an [Object] so that it can no longer be retrieved with [Registrar.get]
@@ -84,7 +83,10 @@ class Registrar<T extends Object> extends StatefulWidget {
         'Error: Tried to unregister an instance of type $T with name $name but it is not registered.',
       );
     }
-    _unregister(type: T, name: name, dispose: dispose);
+    final registryEntry = _unregister(type: T, name: name);
+    if (registryEntry != null && dispose) {
+      registryEntry.lazyInitializer.dispose();
+    }
   }
 
   /// Unregister by runtimeType for when compiled type is not available.
@@ -102,17 +104,19 @@ class Registrar<T extends Object> extends StatefulWidget {
         'Error: Tried to unregister an instance of type $runtimeType with name $name but it is not registered.',
       );
     }
-    _unregister(type: runtimeType, name: name, dispose: dispose);
+    final registryEntry = _unregister(type: runtimeType, name: name);
+    if (registryEntry != null && dispose) {
+      registryEntry.lazyInitializer.dispose();
+    }
   }
 
-  static void _unregister({required Type type, String? name, required bool dispose}) {
+  /// Unregisters but does not dispose.
+  static _RegistryEntry? _unregister({required Type type, String? name}) {
     final registryEntry = _registry[type]!.remove(name);
     if (_registry[type]!.isEmpty) {
       _registry.remove(type);
     }
-    if (dispose) {
-      registryEntry!.lazyInitializer.dispose();
-    }
+    return registryEntry;
   }
 
   /// Determines whether an [Object] is registered and therefore retrievable with [Registrar.get]
@@ -151,7 +155,7 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> with Registr
 
   @override
   void dispose() {
-    disposeImpl(registered: !widget.inherited, name: widget.name, shouldDispose: widget.dispose);
+    disposeImpl(registered: !widget.inherited, name: widget.name, dispose: widget.dispose);
     super.dispose();
   }
 
@@ -173,27 +177,23 @@ mixin RegistrarStateImpl<T extends Object> {
     T? instance,
     void Function(T)? onInitialization,
   }) {
-    assert(
-        !inherited || !registered, 'RegistrarStateImpl does not support declaring both inherited and registered.');
-    if (inherited) {
-      _lazyInitializer = _LazyInitializer<T>(builder: builder, instance: instance, onInitialization: onInitialization);
-    }
+    assert(!inherited || !registered, 'RegistrarStateImpl does not support declaring both inherited and registered.');
+    _lazyInitializer = _LazyInitializer<T>(builder: builder, instance: instance, onInitialization: onInitialization);
     if (registered) {
-      Registrar.register<T>(builder: builder, name: name);
+      Registrar._register(type: T, lazyInitializer: _lazyInitializer, name: name);
     }
   }
 
   void disposeImpl({
     required bool registered,
     String? name,
-    required bool shouldDispose,
+    required bool dispose,
   }) {
     if (registered || isRegisteredInheritedModel.value) {
-      Registrar.unregister<T>(name: name, dispose: shouldDispose);
-    } else {
-      if (shouldDispose) {
-        _lazyInitializer.dispose();
-      }
+      Registrar.unregister<T>(name: name, dispose: false);
+    }
+    if (dispose) {
+      _lazyInitializer.dispose();
     }
   }
 
