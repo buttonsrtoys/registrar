@@ -1,3 +1,9 @@
+Rich,
+- Make fields of public classes private to facilitate subclassing
+- Update Readme
+- Update Changelog
+- Write Medium article
+
 ## Update Example
 
 Add inherited models to the example
