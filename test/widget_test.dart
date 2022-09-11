@@ -19,7 +19,7 @@ Widget testApp({
     MaterialApp(
       home: Registrar(
         builder: () => MyModel(),
-        inherited: inherited,
+        location: inherited ? Location.tree : Location.registry,
         child: MyObserverWidget(inherited: inherited, listen: listen),
       ),
     );

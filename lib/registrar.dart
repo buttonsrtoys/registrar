@@ -1,6 +1,11 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 
+enum Location {
+  registry,
+  tree,
+}
+
 /// A widget that registers single services lazily
 ///
 /// The lifecycle of the [T] object is bound to this widget. The object is registered when this widget is added to the
@@ -12,12 +17,17 @@ import 'package:flutter/widgets.dart';
 /// If object is ChangeNotifier, [dispose] determines if dispose function is called. If object is not a
 /// ChangeNotifier then the value of [dispose] is ignored.
 /// [child] is the child widget.
-/// [inherited] is set to add an InheritedWidget to the widget so children can access with [context.get].
+/// [location] is where to store the model. Set to [Location.tree] to store the model as an inherited model on the
+/// widget tree, which internally uses an InheritedWidget. Set to [Location.registry] to store the model as a single
+/// service in a registry. Single services in the registry are accessible from any branch of the widget tree but can
+/// only have one instance of a given type [T] and [name]. Inherited models can have unlimited instances of type [T]
+/// but are only accessible by descendants. See [context.get], [Observer.get], and [Observer.listenTo] for accessing
+/// single services and inherited models.
 class Registrar<T extends Object> extends StatefulWidget {
   Registrar({
     required this.builder,
     this.name,
-    this.inherited = false,
+    this.location = Location.registry,
     this.dispose = true,
     super.key,
     required this.child,
@@ -25,7 +35,7 @@ class Registrar<T extends Object> extends StatefulWidget {
   final T Function()? builder;
   final String? name;
   final bool dispose;
-  final bool inherited;
+  final Location location;
   final Widget child;
 
   @override
@@ -146,8 +156,7 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> with Registr
   void initState() {
     super.initState();
     initStateImpl(
-        inherited: widget.inherited,
-        registered: !widget.inherited,
+        location: widget.location,
         builder: widget.builder,
         name: widget.name,
         onInitialization: (notifier) => (notifier as ChangeNotifier).addListener(() => setState(() {})));
@@ -155,13 +164,13 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> with Registr
 
   @override
   void dispose() {
-    disposeImpl(registered: !widget.inherited, name: widget.name, dispose: widget.dispose);
+    disposeImpl(location: widget.location, name: widget.name, dispose: widget.dispose);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return buildImpl(isInherited: widget.inherited, child: widget.child);
+    return buildImpl(location: widget.location, child: widget.child);
   }
 }
 
@@ -170,26 +179,24 @@ mixin RegistrarStateImpl<T extends Object> {
   final isRegisteredInheritedModel = _IsRegisteredInheritedModel();
 
   void initStateImpl({
-    required bool inherited,
-    required bool registered,
+    required Location? location,
     String? name,
     T Function()? builder,
     T? instance,
     void Function(T)? onInitialization,
   }) {
-    assert(!inherited || !registered, 'RegistrarStateImpl does not support declaring both inherited and registered.');
     _lazyInitializer = _LazyInitializer<T>(builder: builder, instance: instance, onInitialization: onInitialization);
-    if (registered) {
+    if (location == Location.registry) {
       Registrar._register(type: T, lazyInitializer: _lazyInitializer, name: name);
     }
   }
 
   void disposeImpl({
-    required bool registered,
+    required Location? location,
     String? name,
     required bool dispose,
   }) {
-    if (registered || isRegisteredInheritedModel.value) {
+    if (location == Location.registry || isRegisteredInheritedModel.value) {
       Registrar.unregister<T>(name: name, dispose: false);
     }
     if (dispose) {
@@ -197,8 +204,8 @@ mixin RegistrarStateImpl<T extends Object> {
     }
   }
 
-  Widget buildImpl({required bool isInherited, required Widget child}) {
-    if (isInherited) {
+  Widget buildImpl({required Location? location, required Widget child}) {
+    if (location == Location.tree) {
       return _RegistrarInheritedWidget<T>(
         lazyInitializer: _lazyInitializer,
         registered: isRegisteredInheritedModel,
@@ -220,7 +227,7 @@ extension RegistrarBuildContextExtension on BuildContext {
     return inheritedElement.widget as _RegistrarInheritedWidget<T>;
   }
 
-  /// Searches for a [Registrar] widget with [inherited] param set and a model of type [T].
+  /// Searches for a [Registrar] widget with [location] param set and a model of type [T].
   ///
   /// usage:
   ///
@@ -235,7 +242,7 @@ extension RegistrarBuildContextExtension on BuildContext {
     return inheritedWidget.instance;
   }
 
-  /// Create a dependency with a [Registrar] widget with [inherited] param set and a model of type [T].
+  /// Create a dependency with a [Registrar] widget with [location] param set and a model of type [T].
   ///
   /// Same idea as the "of" feature of Provider.of, Theme.of, etc. For no dependency, use [get].
   /// Performs a lazy initialization if necessary. An exception is thrown if [T] is not a [ChangeNotifier].
@@ -309,11 +316,13 @@ class _IsRegisteredInheritedModel {
   bool value = false;
 }
 
-/// Register multiple [Object]s so they can be retrieved with [Registrar.get]
+/// Register multiple Objects so they can be retrieved with [Registrar.get]
 ///
-/// The lifecycle of each [Object] is bound to this widget. Each object is registered when this widget is added to the
-/// widget tree and unregistered when removed. If an [Object] is of type [ChangeNotifier] then its
-/// [ChangeNotifier.dispose] when it is unregistered.
+/// [MultiRegistrar] only uses [Location.registry] and does not add widget to the widget try per [Location.tree].
+///
+/// The lifecycle of each Object is bound to this widget. Each object is registered when this widget is added to the
+/// widget tree and unregistered when removed. If an Object is of type ChangeNotifier then its
+/// ChangeNotifier.dispose when it is unregistered.
 ///
 /// usage:
 ///   MultiRegistrar(
@@ -453,7 +462,7 @@ mixin Observer {
   T listenTo<T extends ChangeNotifier>(
       {BuildContext? context, T? notifier, String? name, required void Function() listener}) {
     assert(toOne(context) + toOne(notifier) + toOne(name) <= 1,
-        'listenTo can only receive non null for "context", "instance", or "name" but not two or more non nulls.');
+        'listenTo can only receive non-null for "context", "instance", or "name" but not two or more can be non-null.');
     final notifierInstance = context == null ? notifier ?? Registrar.get<T>(name: name) : context.get<T>();
     final subscription = _Subscription(changeNotifier: notifierInstance, listener: listener);
     if (!_subscriptions.contains(subscription)) {
