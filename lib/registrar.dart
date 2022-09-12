@@ -9,8 +9,11 @@ enum Location {
 /// A widget that registers single services lazily
 ///
 /// The lifecycle of the [T] object is bound to this widget. The object is registered when this widget is added to the
-/// widget tree and unregistered when removed. If [T] is of type [ChangeNotifier] then its [ChangeNotifier.dispose]
-/// is called when it is unregistered.
+/// widget tree and unregistered when removed.
+///
+/// Registrar also manages ChangeNotifiers. If [T] is of type ChangeNotifier then a listener is added to the build
+/// ChangeNotifier that rebuilds this Registrar widget when [ChangeNotifier.notifyListeners] is called. Also, its
+/// [ChangeNotifier.dispose] is called when it is unregistered.
 ///
 /// [builder] builds the [T].
 /// [name] is a unique name key and only needed when more than one instance is registered of the same type.
@@ -159,7 +162,11 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> with Registr
         location: widget.location,
         builder: widget.builder,
         name: widget.name,
-        onInitialization: (notifier) => (notifier as ChangeNotifier).addListener(() => setState(() {})));
+        onInitialization: (object) {
+          if (object is ChangeNotifier) {
+            object.addListener(() => setState(() {}));
+          }
+        });
   }
 
   @override
@@ -174,6 +181,10 @@ class _RegistrarState<T extends Object> extends State<Registrar<T>> with Registr
   }
 }
 
+/// Implements the State class of [Registrar]
+///
+/// This was implemented as a mixin so it could be consumed by other packages. E.g.,
+/// [mvvm_plus](https://pub.dev/packages/mvvm_plus) consumes it.
 mixin RegistrarStateImpl<T extends Object> {
   late _LazyInitializer<T> _lazyInitializer;
   final isRegisteredInheritedModel = _IsRegisteredInheritedModel();
@@ -263,7 +274,8 @@ class _LazyInitializer<T extends Object> {
   /// [_builder] builds the instance. In cases where object is already initialized, pass [_instance].
   /// [onInitialization] is called after the call to [_builder].
   _LazyInitializer({required T Function()? builder, required T? instance, this.onInitialization})
-      : assert(builder == null ? instance != null : instance == null, 'Can only pass builder or instance.'),
+      : assert(builder == null ? instance != null : instance == null,
+            '_LazyInitializer constructor can only receive the builder parameter or the instance parameter.'),
         _builder = builder,
         _instance = instance;
 

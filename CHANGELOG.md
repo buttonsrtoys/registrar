@@ -1,3 +1,7 @@
+## 0.4.0 
+- Added location param to be used instead of inherited param.
+- Bug fix where attempted to add listener non-ChangeNotifier.
+
 ## 0.3.1
 Fixed bug where dispose not call omitted.
 

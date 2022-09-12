@@ -1,13 +1,3 @@
-Rich,
-- Make fields of public classes private to facilitate subclassing
-- Update Readme
-- Update Changelog
-- Write Medium article
-
-## Update Example
-
-Add inherited models to the example
-
 ## Add inherited models to RegistrarDelegate
 
 Currently only supports single services.
@@ -20,6 +10,9 @@ other possible locations and report the results to the developer. E.g.,
     'listenTo<MyModel>(context: context)' did not find an inherited model in the widget tree. 
     However, one was found in the registry. Did you mean to call 'listenTo<MyModel>()' (without
     "context")?
+
+When a registry lookup fails, it would be handy to dump the closest matches. E.g., With same type 
+and with different type but same name.
 
 ## Revisit the 'instance' parameter name?
 
@@ -34,8 +27,3 @@ use _LazyInitializer and retain the build function. (This is a rarely used funct
 
 While working on this, add error check when Observer.unregister is called, check that the
 _LazyInitializer is the same. I.e., that it wasn't another Observer that registered the model.
-
-## Add registry output for debugging
-
-When a registry lookup fails, it would be handy to dump the closest matches. E.g., With same type or
-with different type but same name.

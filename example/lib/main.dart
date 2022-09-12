@@ -50,23 +50,14 @@ class _PageState extends State<Page> with Observer {
               OutlinedButton(
                   onPressed: () => setState(() => _counter = Registrar.get<RandomService>().number),
                   child: const Text('Set Random')),
-              FortyTwoButton(onPressed: (BuildContext context) => setState(() => _counter = context.get<FortyTwoService>().number)),
+              Builder(builder: (context) => OutlinedButton(
+                  onPressed: () => setState(() => _counter = context.get<FortyTwoService>().number),
+                  child: const Text('Set 42'))),
             ])),
             floatingActionButton: FloatingActionButton(
               onPressed: _incrementCounter,
               child: const Icon(Icons.add),
             )));
-  }
-}
-
-class FortyTwoButton extends StatelessWidget {
-  const FortyTwoButton({super.key, required this.onPressed});
-
-  final void Function(BuildContext context) onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton(onPressed: () => onPressed(context), child: const Text('Set 42'));
   }
 }
 
