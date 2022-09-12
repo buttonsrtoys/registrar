@@ -6,7 +6,11 @@ import 'package:registrar/registrar.dart';
 
 void main() => runApp(myApp());
 
-Widget myApp() => MaterialApp(home: Registrar<ColorNotifier>(builder: () => ColorNotifier(), child: const Page()));
+Widget myApp() => MaterialApp(
+        home: MultiRegistrar(delegates: [
+      RegistrarDelegate<RandomService>(builder: () => RandomService()),
+      RegistrarDelegate<ColorNotifier>(builder: () => ColorNotifier()),
+    ], child: const Page()));
 
 class Page extends StatefulWidget {
   const Page({super.key});
@@ -34,11 +38,9 @@ class _PageState extends State<Page> with Observer {
 
   @override
   Widget build(BuildContext context) {
-    return MultiRegistrar(
-        delegates: [
-          RegistrarDelegate<FortyTwoService>(builder: () => FortyTwoService()),
-          RegistrarDelegate<RandomService>(builder: () => RandomService()),
-        ],
+    return Registrar<FortyTwoService>(
+        location: Location.tree,
+        builder: () => FortyTwoService(),
         child: Scaffold(
             body: Center(
                 child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -48,14 +50,23 @@ class _PageState extends State<Page> with Observer {
               OutlinedButton(
                   onPressed: () => setState(() => _counter = Registrar.get<RandomService>().number),
                   child: const Text('Set Random')),
-              OutlinedButton(
-                  onPressed: () => setState(() => _counter = Registrar.get<FortyTwoService>().number),
-                  child: const Text('Set 42'))
+              FortyTwoButton(onPressed: (BuildContext context) => setState(() => _counter = context.get<FortyTwoService>().number)),
             ])),
             floatingActionButton: FloatingActionButton(
               onPressed: _incrementCounter,
               child: const Icon(Icons.add),
             )));
+  }
+}
+
+class FortyTwoButton extends StatelessWidget {
+  const FortyTwoButton({super.key, required this.onPressed});
+
+  final void Function(BuildContext context) onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(onPressed: () => onPressed(context), child: const Text('Set 42'));
   }
 }
 
