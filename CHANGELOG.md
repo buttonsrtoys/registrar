@@ -1,3 +1,8 @@
+## 0.4.0 
+- Added "location" param Registrar to be used instead of "inherited" param.
+- Bug fix where attempted to add listener non-ChangeNotifier.
+- Improved lazy initialization.
+
 ## 0.3.1
 Fixed bug where dispose not call omitted.
 

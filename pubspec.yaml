@@ -1,6 +1,6 @@
 name: registrar
-description: A Flutter hybrid locator that locates both global services (similar to GetIt) and scoped inherited models (similar to Provider, InheritedWidget). Supports registering inherited models as global services.
-version: 0.3.1
+description: A flexible hybrid locator that supports both single services (like GetIt) and inherited models (like Provider).
+version: 0.4.0
 repository: https://github.com/buttonsrtoys/registrar
 issue_tracker: https://github.com/buttonsrtoys/registrar/issues
 
